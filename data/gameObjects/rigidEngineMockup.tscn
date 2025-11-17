@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://cfdcg0x8hjfpn"]
+
+[ext_resource type="Texture2D" uid="uid://dk2qilxi3mv20" path="res://assets/mockup/EngineMockup.png" id="1_2neue"]
+[ext_resource type="Script" uid="uid://dljn68ov306l" path="res://RigidEngineMockup.cs" id="1_pmb0y"]
+[ext_resource type="Texture2D" uid="uid://cjlj0vqnptfh7" path="res://assets/mockup/PlumeMockup.png" id="2_pmb0y"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tcisq"]
+
+[node name="RigidBody2D" type="RigidBody2D"]
+mass = 10.0
+gravity_scale = 0.01
+script = ExtResource("1_pmb0y")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_tcisq")
+
+[node name="engineSprite" type="Sprite2D" parent="."]
+scale = Vector2(0.075, 0.075)
+texture = ExtResource("1_2neue")
+
+[node name="thrustSprite" type="Sprite2D" parent="."]
+position = Vector2(0, 16)
+rotation = 3.1415927
+scale = Vector2(0.05, 0.05)
+texture = ExtResource("2_pmb0y")
