@@ -58,11 +58,6 @@ public partial class BuilderObject_Placeable : Area2D
 		if (!_isMouseOver) return;
 		if (@event is InputEventMouseButton mouseEvent)
 		{
-			// this will prevent pickup once objects are snapped [[TEMP!]]
-			if (GetParent() != GetTree().Root)
-			{
-				return;
-			}
 
 			// do you want place-on-press or place-on-release?
 			if (!IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
@@ -94,7 +89,7 @@ public partial class BuilderObject_Placeable : Area2D
 					return;
 				}
 				QueueFree();
-				// GD.Print(Name + " discarded.");
+				GD.Print(Name + " discarded.");
 			}
 		}
 
