@@ -10,14 +10,13 @@ public partial class BuilderObject_Placeable : Area2D
 	// is it connected to the root object?
 	public bool IsConnectedToRoot = false;
 	// is it being dragged?
-	public bool IsBeingDragged = true;
+	public bool IsBeingDragged = false;
 	// is it dropped?
 	public bool IsDropped = false;
-
+	public bool IsRoot = false;
+	
 	// ignore spawn click
 	private bool _ignoreInitialLeftClick = true;
-
-	private bool _isRoot = false;
 	private bool _isMouseOver = false;
 	private float _snapDistance = 32.0f;
 	public List<Marker2D> SnapPoints = new List<Marker2D>();
@@ -32,6 +31,7 @@ public partial class BuilderObject_Placeable : Area2D
 				SnapPoints.Add(marker);
 			}
 		}
+		IsBeingDragged = true;
 		_isMouseOver = true;
 		_FollowMouse();
 	}
@@ -54,32 +54,47 @@ public partial class BuilderObject_Placeable : Area2D
 		// right mouse will pick up a tile that is already placed and all its connected tiles
 		// right mouse will also pick up the root tile and connected tiles if any exist
 
-		// old code, please god replace this
+		// ok now is the time to fix input
 		if (!_isMouseOver) return;
 		if (@event is InputEventMouseButton mouseEvent)
 		{
-			if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+			// this will prevent pickup once objects are snapped [[TEMP!]]
+			if (GetParent() != GetTree().Root)
 			{
-				if (TryAutoSnap())
+				return;
+			}
+
+			// do you want place-on-press or place-on-release?
+			if (!IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+			{
+				if (GetParent() == GetTree().Root)
+				{
+					IsSnapped = false;
+				}
+				IsBeingDragged = true;
+				_FollowMouse();
+			} else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+			{
+				if (!IsRoot && _isMouseOver && TryAutoSnap())
 				{
 					Position = _snapPosition;
+					IsSnapped = true;
 				}
 				else
 				{
 					Position = GetGlobalMousePosition();
 				}
 				IsBeingDragged = false;
-				GD.Print(Name + " placed at: " + Position);
-			}
-			else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
+				// GD.Print(Name + " placed at: " + Position);
+			} else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
 			{
+				if (IsRoot)
+				{
+					IsBeingDragged = false;
+					return;
+				}
 				QueueFree();
-				GD.Print(Name + " placement cancelled.");
-			}
-			else if (!IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
-			{
-				IsBeingDragged = true;
-				_FollowMouse();
+				// GD.Print(Name + " discarded.");
 			}
 		}
 
@@ -93,7 +108,7 @@ public partial class BuilderObject_Placeable : Area2D
 	{
 		// you need new snapping logic, cuz what you have
 		// in Hull.cs is not good
-		var allTiles = GetTree().GetNodesInGroup("BuilderPlaceableObjects");
+		var allTiles = GetTree().GetNodesInGroup("BuilderObjectsPlaceable");
 
 		BuilderObject_Placeable nearestObject = null;
 		Marker2D nearestSnapFrom = null;
@@ -106,8 +121,6 @@ public partial class BuilderObject_Placeable : Area2D
 		{
 			if (tile == this) continue;
 			snapToPoints = tile.SnapPoints;
-
-			GD.Print("Checking tile: " + tile.Name);
 
 			foreach (Marker2D snapFrom in SnapPoints)
 			{
@@ -129,12 +142,14 @@ public partial class BuilderObject_Placeable : Area2D
 
 		if (nearestObject != null && nearestDistance <= _snapDistance)
 		{
-			// find best snap position
-			Vector2 offset = Position - nearestSnapFrom.GlobalPosition;
-			_snapPosition = nearestSnapTo.GlobalPosition + offset;
-
 			if (!_WouldOverlap(nearestObject))
 			{
+				// find best snap position
+				Vector2 offset = nearestSnapFrom.Position;
+				_snapPosition = nearestSnapTo.Position - offset;
+				if (!IsSnapped && !IsAncestorOf(nearestObject)) {
+					Reparent(nearestObject);
+				}
 				return true;
 			}
 		}
@@ -147,7 +162,7 @@ public partial class BuilderObject_Placeable : Area2D
 	private void _FindRoot()
 	{
 		// the root object will inherit from this class
-		if (_isRoot) return;
+		if (IsRoot) return;
 		// logic to find and connect to root object
 	}
 
@@ -180,12 +195,12 @@ public partial class BuilderObject_Placeable : Area2D
 	}
 
 	// this is a hacky and bad way to do this but it has to work for now
-	private void _OnMouseEntered()
+	private void OnMouseEntered()
 	{
 		_isMouseOver = true;
 	}
 
-	private void _OnMouseExited()
+	private void OnMouseExited()
 	{
 		_isMouseOver = false;
 	}

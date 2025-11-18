@@ -6,7 +6,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_d7ri1"]
 size = Vector2(256, 256)
 
-[node name="HullPiece" type="Area2D" groups=["BuilderPlaceableObjects"]]
+[node name="HullPiece" type="Area2D" groups=["BuilderObjectsPlaceable"]]
 scale = Vector2(0.2, 0.2)
 script = ExtResource("1_d7ri1")
 
@@ -28,5 +28,5 @@ position = Vector2(0, 128)
 [node name="SnapW" type="Marker2D" parent="."]
 position = Vector2(-128, 0)
 
-[connection signal="mouse_entered" from="." to="." method="_OnMouseEntered"]
-[connection signal="mouse_exited" from="." to="." method="_OnMouseExited"]
+[connection signal="mouse_entered" from="." to="." method="OnMouseEntered"]
+[connection signal="mouse_exited" from="." to="." method="OnMouseExited"]
