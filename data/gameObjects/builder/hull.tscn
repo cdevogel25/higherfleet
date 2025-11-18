@@ -13,7 +13,7 @@ script = ExtResource("1_d7ri1")
 [node name="HullSprite" type="Sprite2D" parent="."]
 texture = ExtResource("1_e17hn")
 
-[node name="ObjectCollision" type="CollisionShape2D" parent="."]
+[node name="ObjectCollisionShape" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_d7ri1")
 
 [node name="SnapN" type="Marker2D" parent="."]

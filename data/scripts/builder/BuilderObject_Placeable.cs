@@ -14,6 +14,9 @@ public partial class BuilderObject_Placeable : Area2D
 	// is it dropped?
 	public bool IsDropped = false;
 
+	// ignore spawn click
+	private bool _ignoreInitialLeftClick = true;
+
 	private bool _isRoot = false;
 	private bool _isMouseOver = false;
 	private float _snapDistance = 32.0f;
@@ -29,7 +32,8 @@ public partial class BuilderObject_Placeable : Area2D
 				SnapPoints.Add(marker);
 			}
 		}
-		Position = GetGlobalMousePosition();
+		_isMouseOver = true;
+		_FollowMouse();
 	}
 
 	/* Every placeable object should have:
@@ -128,7 +132,6 @@ public partial class BuilderObject_Placeable : Area2D
 			// find best snap position
 			Vector2 offset = Position - nearestSnapFrom.GlobalPosition;
 			_snapPosition = nearestSnapTo.GlobalPosition + offset;
-			return true;
 
 			if (!_WouldOverlap(nearestObject))
 			{
