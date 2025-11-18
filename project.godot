@@ -21,7 +21,7 @@ project/assembly_name="Higherfleet"
 
 [global_group]
 
-HullTiles=""
+BuilderPlaceableObjects=""
 
 [input]
 
