@@ -1,6 +1,8 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
+using System.Threading;
 
 public partial class BuilderObject_Placeable : Area2D
 {
@@ -14,6 +16,7 @@ public partial class BuilderObject_Placeable : Area2D
 	// is it dropped?
 	public bool IsDropped = false;
 	public bool IsRoot = false;
+	public Vector2 RootOffset = Vector2.Zero;
 	
 	// ignore spawn click
 	private bool _ignoreInitialLeftClick = true;
@@ -59,10 +62,10 @@ public partial class BuilderObject_Placeable : Area2D
 		if (@event is InputEventMouseButton mouseEvent)
 		{
 			// this will prevent pickup once objects are snapped [[TEMP!]]
-			if (GetParent() != GetTree().Root)
-			{
-				return;
-			}
+			// if (GetParent() != GetTree().Root)
+			// {
+			// 	return;
+			// }
 
 			// do you want place-on-press or place-on-release?
 			if (!IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
@@ -70,6 +73,10 @@ public partial class BuilderObject_Placeable : Area2D
 				if (GetParent() == GetTree().Root)
 				{
 					IsSnapped = false;
+				} else if (GetParent() == GetTree().Root.GetNode("Node2D/RootHull"))
+				{
+					IsSnapped = false;
+					Reparent(GetTree().Root);
 				}
 				IsBeingDragged = true;
 				_FollowMouse();
@@ -77,7 +84,10 @@ public partial class BuilderObject_Placeable : Area2D
 			{
 				if (!IsRoot && _isMouseOver && TryAutoSnap())
 				{
+					
 					Position = _snapPosition;
+					GD.Print("Position relative to parent after snap: " + Position);
+					RootOffset = Position;
 					IsSnapped = true;
 				}
 				else
@@ -139,16 +149,17 @@ public partial class BuilderObject_Placeable : Area2D
 				}
 			}
 		}
+		GD.Print("NearestSnapTo: " + nearestSnapTo + " NearestSnapFrom: " + nearestSnapFrom + " NearestDistance: " + nearestDistance);
 
 		if (nearestObject != null && nearestDistance <= _snapDistance)
 		{
-			if (!_WouldOverlap(nearestObject))
+			Vector2 offset = nearestSnapFrom.Position;
+			if (!_WouldOverlap(nearestObject, offset))
 			{
-				// find best snap position
-				Vector2 offset = nearestSnapFrom.Position;
-				_snapPosition = nearestSnapTo.Position - offset;
+				_snapPosition = nearestSnapTo.Position - offset + nearestObject.RootOffset;
+
 				if (!IsSnapped && !IsAncestorOf(nearestObject)) {
-					Reparent(nearestObject);
+					Reparent(GetTree().Root.GetNode("/root/Node2D/RootHull"));
 				}
 				return true;
 			}
@@ -181,17 +192,17 @@ public partial class BuilderObject_Placeable : Area2D
 		}
 	}
 
-	private bool _WouldOverlap(BuilderObject_Placeable nearestObject)
+	private bool _WouldOverlap(BuilderObject_Placeable nearestObject, Vector2 offset)
 	{
 		// logic to check for overlap with other objects
 		// there's gotta be a better way to do this using the built-in collision stuff
-
-		Vector2 thisSize = GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size;
-		var overlapRect = new Rect2(_snapPosition, thisSize * Scale);
-		Rect2 otherPosition = nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
-		otherPosition = new Rect2(nearestObject.GlobalPosition, otherPosition.Size * Scale);
-
-		return overlapRect.Intersects(otherPosition);
+		// return OnAreaShapeEntered(nearestObject);
+		// Vector2 thisSize = GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size;
+		// var overlapRect = new Rect2(_snapPosition + RootOffset, thisSize * Scale);
+		// Rect2 otherPosition = nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
+		// otherPosition = new Rect2(nearestObject.GlobalPosition, otherPosition.Size * Scale);
+		Rect2 collider = new Rect2(_snapPosition + offset, this.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size * Scale);
+		return nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Intersects(collider);
 	}
 
 	// this is a hacky and bad way to do this but it has to work for now
