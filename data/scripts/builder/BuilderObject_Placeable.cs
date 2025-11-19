@@ -191,95 +191,95 @@ public partial class BuilderObject_Placeable : Area2D
 		return overlapRect.Intersects(otherPosition);
 	}
 
-	    // NEW: connect two tiles bidirectionally and update connected-to-root state
-    public void ConnectTo(BuilderObject_Placeable other)
-    {
-        if (other == null || other == this) return;
-        if (!Neighbors.Contains(other)) Neighbors.Add(other);
-        if (!other.Neighbors.Contains(this)) other.Neighbors.Add(this);
+		// NEW: connect two tiles bidirectionally and update connected-to-root state
+	public void ConnectTo(BuilderObject_Placeable other)
+	{
+		if (other == null || other == this) return;
+		if (!Neighbors.Contains(other)) Neighbors.Add(other);
+		if (!other.Neighbors.Contains(this)) other.Neighbors.Add(this);
 
-        // if either side is root or already connected, propagate the connection
-        bool connected = this.IsRoot || this.IsConnectedToRoot || other.IsRoot || other.IsConnectedToRoot;
-        if (connected)
-        {
-            this.PropagateConnection(true);
-            other.PropagateConnection(true);
-        }
-    }
+		// if either side is root or already connected, propagate the connection
+		bool connected = this.IsRoot || this.IsConnectedToRoot || other.IsRoot || other.IsConnectedToRoot;
+		if (connected)
+		{
+			this.PropagateConnection(true);
+			other.PropagateConnection(true);
+		}
+	}
 
-    // NEW: disconnect two tiles (bidirectional) and re-evaluate connected components
-    public void DisconnectFrom(BuilderObject_Placeable other)
-    {
-        if (other == null) return;
-        Neighbors.Remove(other);
-        other.Neighbors.Remove(this);
+	// NEW: disconnect two tiles (bidirectional) and re-evaluate connected components
+	public void DisconnectFrom(BuilderObject_Placeable other)
+	{
+		if (other == null) return;
+		Neighbors.Remove(other);
+		other.Neighbors.Remove(this);
 
-        // after disconnect, re-evaluate connected-component connectivity for both sides
-        this.ReevaluateComponentConnectivity();
-        other.ReevaluateComponentConnectivity();
-    }
+		// after disconnect, re-evaluate connected-component connectivity for both sides
+		this.ReevaluateComponentConnectivity();
+		other.ReevaluateComponentConnectivity();
+	}
 
-    // mark or unmark the entire connected component
-    private void PropagateConnection(bool connected)
-    {
-        var visited = new HashSet<BuilderObject_Placeable>();
-        var stack = new Stack<BuilderObject_Placeable>();
-        stack.Push(this);
-        while (stack.Count > 0)
-        {
-            var cur = stack.Pop();
-            if (visited.Contains(cur)) continue;
-            visited.Add(cur);
-            cur.IsConnectedToRoot = connected;
-            foreach (var n in cur.Neighbors)
-            {
-                if (!visited.Contains(n)) stack.Push(n);
-            }
-        }
-    }
+	// mark or unmark the entire connected component
+	private void PropagateConnection(bool connected)
+	{
+		var visited = new HashSet<BuilderObject_Placeable>();
+		var stack = new Stack<BuilderObject_Placeable>();
+		stack.Push(this);
+		while (stack.Count > 0)
+		{
+			var cur = stack.Pop();
+			if (visited.Contains(cur)) continue;
+			visited.Add(cur);
+			cur.IsConnectedToRoot = connected;
+			foreach (var n in cur.Neighbors)
+			{
+				if (!visited.Contains(n)) stack.Push(n);
+			}
+		}
+	}
 
-    // find whether this component has a root; update all nodes in component
-    private void ReevaluateComponentConnectivity()
-    {
-        // BFS to collect the component
-        var component = new List<BuilderObject_Placeable>();
-        var q = new Queue<BuilderObject_Placeable>();
-        var seen = new HashSet<BuilderObject_Placeable>();
-        q.Enqueue(this);
-        seen.Add(this);
-        while (q.Count > 0)
-        {
-            var cur = q.Dequeue();
-            component.Add(cur);
-            foreach (var n in cur.Neighbors)
-            {
-                if (!seen.Contains(n))
-                {
-                    seen.Add(n);
-                    q.Enqueue(n);
-                }
-            }
-        }
+	// find whether this component has a root; update all nodes in component
+	private void ReevaluateComponentConnectivity()
+	{
+		// BFS to collect the component
+		var component = new List<BuilderObject_Placeable>();
+		var q = new Queue<BuilderObject_Placeable>();
+		var seen = new HashSet<BuilderObject_Placeable>();
+		q.Enqueue(this);
+		seen.Add(this);
+		while (q.Count > 0)
+		{
+			var cur = q.Dequeue();
+			component.Add(cur);
+			foreach (var n in cur.Neighbors)
+			{
+				if (!seen.Contains(n))
+				{
+					seen.Add(n);
+					q.Enqueue(n);
+				}
+			}
+		}
 
-        // if any node in component is root -> whole component is connected
-        bool hasRoot = false;
-        foreach (var n in component) if (n.IsRoot) { hasRoot = true; break; }
+		// if any node in component is root -> whole component is connected
+		bool hasRoot = false;
+		foreach (var n in component) if (n.IsRoot) { hasRoot = true; break; }
 
-        foreach (var n in component) n.IsConnectedToRoot = hasRoot;
-    }
+		foreach (var n in component) n.IsConnectedToRoot = hasRoot;
+	}
 
-    // NEW: reparent this node under anchor's parent while preserving world position
-    private void Reparent(BuilderObject_Placeable anchor)
-    {
-        if (anchor == null) return;
-        Vector2 worldPos = GlobalPosition;
-        Node oldParent = GetParent();
-        Node newParent = anchor.GetParent() ?? GetTree().Root;
+	// NEW: reparent this node under anchor's parent while preserving world position
+	private void Reparent(BuilderObject_Placeable anchor)
+	{
+		if (anchor == null) return;
+		Vector2 worldPos = GlobalPosition;
+		Node oldParent = GetParent();
+		Node newParent = anchor.GetParent() ?? GetTree().Root;
 
-        if (oldParent != null) oldParent.RemoveChild(this);
-        newParent.AddChild(this);
-        GlobalPosition = worldPos;
-    }
+		if (oldParent != null) oldParent.RemoveChild(this);
+		newParent.AddChild(this);
+		GlobalPosition = worldPos;
+	}
 
 	// this is a hacky and bad way to do this but it has to work for now
 	private void OnMouseEntered()
