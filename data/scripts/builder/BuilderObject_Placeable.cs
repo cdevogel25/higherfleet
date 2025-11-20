@@ -5,21 +5,13 @@ using System.Linq;
 public partial class BuilderObject_Placeable : Area2D
 {
 	// what do other objects need to know about a placeable object?
-	// is it snapped in place?
 	public bool IsSnapped = false;
-	// is it connected to the root object?
-	public bool IsConnectedToRoot = false;
-	// is it being dragged?
 	public bool IsBeingDragged = false;
-	// is it dropped?
 	public bool IsDropped = false;
 	public bool IsRoot = false;
 	public Vector2 RootOffset = Vector2.Zero;
 	
-	// ignore spawn click
-	private bool _ignoreInitialLeftClick = true;
 	private bool _isMouseOver = false;
-	private float _snapDistance = 32.0f;
 	public List<Marker2D> SnapPoints = new List<Marker2D>();
 	private Vector2 _snapPosition = Vector2.Zero;
 	// private bool _isOverlapAreaVisible = false;
@@ -55,60 +47,60 @@ public partial class BuilderObject_Placeable : Area2D
 	// method skeletons
 	public override void _Input(InputEvent @event)
 	{
+		// [TODO]
 		// left mouse will pick up a single tile (if not the root tile)
 		// right mouse will cancel placement of a currently-dragged tile
 		// right mouse will pick up a tile that is already placed and all its connected tiles
 		// right mouse will also pick up the root tile and connected tiles if any exist
 
-		// ok now is the time to fix input
 		if (!_isMouseOver) return;
+
 		if (@event is InputEventMouseButton mouseEvent)
 		{
-			// is picked up and left mouse button is pressed
-			if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+			if (mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
 			{
-				bool autoSnap = TryAutoSnap();
-				GD.Print("AutoSnap result: " + autoSnap);
-				if (autoSnap && !IsRoot)
+				if (IsBeingDragged)
 				{
-					
-					Position = _snapPosition;
-					GD.Print("Position relative to parent after snap: " + Position);
-					RootOffset = Position;
-					IsSnapped = true;
-				}
-				else
-				{
-					Position = GetGlobalMousePosition();
-				}
-				SetOverlapArea_Visible(false);
-				IsBeingDragged = false;
-				return;
-				// GD.Print(Name + " placed at: " + Position);
-			} else if (!IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
-			{
-				if (GetParent() == GetTree().Root)
-				{
-					IsSnapped = false;
-				} else if (GetParent() == GetTree().Root.GetNode("Node2D/RootHull"))
-				{
-					IsSnapped = false;
-					Reparent(GetTree().Root);
-				}
-				SetOverlapArea_Visible(true);
-				IsBeingDragged = true;
-				_FollowMouse();
-				return;
-			} else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
-			{
-				if (IsRoot)
-				{
+					bool autoSnap = TryAutoSnap();
+					if (autoSnap && !IsRoot)
+					{
+						Position = _snapPosition;
+						RootOffset = Position;
+						IsSnapped = true;
+					} else
+					{
+						Position = GetGlobalMousePosition();
+					}
+					SetOverlapArea_Visible(false);
 					IsBeingDragged = false;
 					return;
+				} else
+				{
+					if (GetParent() == GetTree().Root)
+					{
+						IsSnapped = false;
+					} else if (GetParent() == GetTree().Root.GetNode("Node2D/RootHull"))
+					{
+						IsSnapped = false;
+						Reparent(GetTree().Root);
+					}
+					SetOverlapArea_Visible(true);
+					IsBeingDragged = true;
+					_FollowMouse();
+					return;
 				}
-				QueueFree();
-				// GD.Print(Name + " discarded.");
-				return;
+			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
+			{
+				if (IsBeingDragged)
+				{
+					if (IsRoot)
+					{
+						IsBeingDragged = false;
+						return;
+					}
+					QueueFree();
+					return;
+				}
 			}
 		}
 
@@ -151,12 +143,15 @@ public partial class BuilderObject_Placeable : Area2D
 				}
 			}
 
-			Vector2 offset = nearestSnapFrom.Position;
-			if (!_WouldOverlap(neighbors[0], offset))
-			{
-				_snapPosition = nearestSnapTo.Position - offset + neighbors[0].RootOffset;
+			BuilderObject_Placeable snapToParent = nearestSnapTo.GetParent<BuilderObject_Placeable>();
 
-				if (!IsSnapped && !IsAncestorOf(neighbors[0]))
+			// offset is the distance from the center of this tile to the selected snap-from point
+			// snapPosition should be the position of the snap-to point minus the offset, plus the snap-to object's root offset
+			var offset = nearestSnapFrom.Position;
+			_snapPosition = nearestSnapTo.Position - offset + nearestSnapTo.GetParent<BuilderObject_Placeable>().RootOffset; // is this neighbors[0].RootOffset? Try both. 
+			if(!_WouldOverlap(snapToParent, _snapPosition))
+			{
+				if (!IsSnapped && !IsAncestorOf(snapToParent))
 				{
 					Reparent(GetTree().Root.GetNode("Node2D/RootHull"));
 				}
@@ -171,7 +166,6 @@ public partial class BuilderObject_Placeable : Area2D
 	{
 		// the root object will inherit from this class
 		if (IsRoot) return;
-		// logic to find and connect to root object
 	}
 
 	public void EdgeDetection()
@@ -189,21 +183,24 @@ public partial class BuilderObject_Placeable : Area2D
 		}
 	}
 
-	// use something similar for neighbor detection
-	private bool _WouldOverlap(BuilderObject_Placeable nearestObject, Vector2 offset)
+	// _WouldOverlap is not working correctly. Why?
+	// origin of rect2 is the top left stupid (so you need to move it by half size to center it)
+	// but also why is it like that
+	private bool _WouldOverlap(BuilderObject_Placeable nearestObject, Vector2 snapTo)
 	{
-		// logic to check for overlap with other objects
-		Rect2 collider = new Rect2(_snapPosition + offset, GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size * Scale);
-		return nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Intersects(collider);
+		Rect2 thisRect = GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
+		thisRect.Position = snapTo - (thisRect.Size / 2);
+		GD.Print(thisRect.Position);
+		Rect2 nearestRect = nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
+		nearestRect.Position = nearestObject.Position - (nearestRect.Size / 2);
+		GD.Print(nearestRect.Position);
+		return thisRect.Intersects(nearestRect);
 	}
 
-	// this needs some changes to be used in TryAutoSnap
 	public List<BuilderObject_Placeable> GetNeighbors()
 	{
-		// logic to get neighboring placeable objects
-		// first: get the neighbor checkers
-		// THIS FIXES EVERYTHING, use this for snapping.
 		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("NeighborCheck")).ToList();
+
 		List<BuilderObject_Placeable> neighbors = new List<BuilderObject_Placeable>();
 
 		foreach (Area2D checker in checkers)
@@ -234,7 +231,6 @@ public partial class BuilderObject_Placeable : Area2D
 		}
 	}
 
-	// this is a hacky and bad way to do this but it has to work for now
 	private void OnMouseEntered()
 	{
 		_isMouseOver = true;
