@@ -1,8 +1,6 @@
 using Godot;
-using System;
 using System.Collections.Generic;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading;
+using System.Linq;
 
 public partial class BuilderObject_Placeable : Area2D
 {
@@ -25,8 +23,12 @@ public partial class BuilderObject_Placeable : Area2D
 	public List<Marker2D> SnapPoints = new List<Marker2D>();
 	private Vector2 _snapPosition = Vector2.Zero;
 
+	// graph node for this placeable object
+	public ShipGraphNode GraphNode = null;
+
 	public override void _Ready()
 	{
+		GraphNode = new ShipGraphNode(this, IsRoot);
 		foreach (Node2D c in GetChildren())
 		{
 			if (c is Marker2D marker && marker.Name.ToString().StartsWith("Snap"))
@@ -82,6 +84,7 @@ public partial class BuilderObject_Placeable : Area2D
 				_FollowMouse();
 			} else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
 			{
+				GetNeighbors();
 				if (!IsRoot && _isMouseOver && TryAutoSnap())
 				{
 					
@@ -116,50 +119,45 @@ public partial class BuilderObject_Placeable : Area2D
 
 	public bool TryAutoSnap()
 	{
-		// you need new snapping logic, cuz what you have
-		// in Hull.cs is not good
-		var allTiles = GetTree().GetNodesInGroup("BuilderObjectsPlaceable");
+		// logic to find nearest snap point on nearby placeable objects
+		// check in order: north, east, south, west
 
-		BuilderObject_Placeable nearestObject = null;
-		Marker2D nearestSnapFrom = null;
-		Marker2D nearestSnapTo = null;
-		List<Marker2D> snapToPoints;
+		// first: get all neighbors
+		// then: for the first (if any) neighbor, get its snap points
+		// then: check distance from this object to each of neighbor's snap points
+		// then: snap to the closest snap point and reparent.
+		List <BuilderObject_Placeable> neighbors = new List<BuilderObject_Placeable>();
+		neighbors = GetNeighbors();
 
-		float nearestDistance = float.MaxValue;
-
-		foreach (BuilderObject_Placeable tile in allTiles)
+		if (neighbors.Count > 0)
 		{
-			if (tile == this) continue;
-			snapToPoints = tile.SnapPoints;
+			List<Marker2D> potentialSnapPoints = neighbors[0].SnapPoints;
+			float distance = float.MaxValue;
+			Marker2D nearestSnapTo = null;
+			Marker2D nearestSnapFrom = null;
 
 			foreach (Marker2D snapFrom in SnapPoints)
 			{
-				foreach (Marker2D snapTo in snapToPoints)
+				foreach (Marker2D snapTo in potentialSnapPoints)
 				{
-					float distance = snapFrom.GlobalPosition.DistanceTo(snapTo.GlobalPosition);
-
-					if (distance < nearestDistance && distance <= _snapDistance)
+					float currentDistance = snapFrom.GlobalPosition.DistanceTo(snapTo.GlobalPosition);
+					if (currentDistance < distance)
 					{
-						nearestDistance = distance;
-						nearestObject = tile;
-
-						nearestSnapFrom = snapFrom;
+						distance = currentDistance;
 						nearestSnapTo = snapTo;
+						nearestSnapFrom = snapFrom;
 					}
 				}
 			}
-		}
-		GD.Print("NearestSnapTo: " + nearestSnapTo + " NearestSnapFrom: " + nearestSnapFrom + " NearestDistance: " + nearestDistance);
 
-		if (nearestObject != null && nearestDistance <= _snapDistance)
-		{
 			Vector2 offset = nearestSnapFrom.Position;
-			if (!_WouldOverlap(nearestObject, offset))
+			if (!_WouldOverlap(neighbors[0], offset))
 			{
-				_snapPosition = nearestSnapTo.Position - offset + nearestObject.RootOffset;
+				_snapPosition = nearestSnapTo.Position - offset + neighbors[0].RootOffset;
 
-				if (!IsSnapped && !IsAncestorOf(nearestObject)) {
-					Reparent(GetTree().Root.GetNode("/root/Node2D/RootHull"));
+				if (!IsSnapped && !IsAncestorOf(neighbors[0]))
+				{
+					Reparent(GetTree().Root.GetNode("Node2D/RootHull"));
 				}
 				return true;
 			}
@@ -167,8 +165,6 @@ public partial class BuilderObject_Placeable : Area2D
 
 		return false;
 	}
-
-
 
 	private void _FindRoot()
 	{
@@ -192,11 +188,36 @@ public partial class BuilderObject_Placeable : Area2D
 		}
 	}
 
+	// use something similar for neighbor detection
 	private bool _WouldOverlap(BuilderObject_Placeable nearestObject, Vector2 offset)
 	{
 		// logic to check for overlap with other objects
 		Rect2 collider = new Rect2(_snapPosition + offset, GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size * Scale);
 		return nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Intersects(collider);
+	}
+
+	// this needs some changes to be used in TryAutoSnap
+	public List<BuilderObject_Placeable> GetNeighbors()
+	{
+		// logic to get neighboring placeable objects
+		// first: get the neighbor checkers
+		// THIS FIXES EVERYTHING, use this for snapping.
+		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("NeighborCheck")).ToList();
+		List<BuilderObject_Placeable> neighbors = new List<BuilderObject_Placeable>();
+
+		foreach (Area2D checker in checkers)
+		{
+			var overlappingAreas = checker.GetOverlappingAreas();
+			foreach (var area in overlappingAreas)
+			{
+				if (area is BuilderObject_Placeable placeable && placeable != this)
+				{
+					neighbors.Add(placeable);
+				}
+			}
+		}
+
+		return neighbors;		
 	}
 
 	// this is a hacky and bad way to do this but it has to work for now
