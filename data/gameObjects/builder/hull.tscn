@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://fv7yglb02tg1"]
+[gd_scene load_steps=9 format=3 uid="uid://fv7yglb02tg1"]
 
 [ext_resource type="Script" uid="uid://l2yxggp25tyd" path="res://data/scripts/builder/Hull.cs" id="1_d7ri1"]
 [ext_resource type="Texture2D" uid="uid://bi4i7evc2ql8j" path="res://assets/mockup/ShipMockup.png" id="1_e17hn"]
+[ext_resource type="Texture2D" uid="uid://dvh65jqriwkqd" path="res://assets/mockup/OverlapChecker.png" id="3_twle2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_d7ri1"]
 size = Vector2(258.00006, 256)
@@ -44,6 +45,11 @@ position = Vector2(-128, 0)
 position = Vector2(192, 0)
 monitorable = false
 
+[node name="Sprite2D" type="Sprite2D" parent="NeighborCheckEast"]
+rotation = 1.5707964
+scale = Vector2(0.93, 0.9)
+texture = ExtResource("3_twle2")
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NeighborCheckEast"]
 position = Vector2(0.5, 0)
 scale = Vector2(0.9999997, 0.9999997)
@@ -52,6 +58,11 @@ shape = SubResource("RectangleShape2D_twle2")
 [node name="NeighborCheckWest" type="Area2D" parent="."]
 position = Vector2(-192, 0)
 monitorable = false
+
+[node name="Sprite2D" type="Sprite2D" parent="NeighborCheckWest"]
+rotation = 1.5707964
+scale = Vector2(0.93, 0.9)
+texture = ExtResource("3_twle2")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NeighborCheckWest"]
 position = Vector2(-0.5, 0)
@@ -62,6 +73,10 @@ shape = SubResource("RectangleShape2D_rdc2r")
 position = Vector2(0, -192)
 monitorable = false
 
+[node name="Sprite2D" type="Sprite2D" parent="NeighborCheckNorth"]
+scale = Vector2(0.93, 0.9)
+texture = ExtResource("3_twle2")
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NeighborCheckNorth"]
 position = Vector2(0, -0.5)
 scale = Vector2(0.9999995, 0.9999995)
@@ -70,6 +85,10 @@ shape = SubResource("RectangleShape2D_xppqw")
 [node name="NeighborCheckSouth" type="Area2D" parent="."]
 position = Vector2(0, 192)
 monitorable = false
+
+[node name="Sprite2D" type="Sprite2D" parent="NeighborCheckSouth"]
+scale = Vector2(0.93, 0.9)
+texture = ExtResource("3_twle2")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NeighborCheckSouth"]
 scale = Vector2(0.9999995, 0.9999995)

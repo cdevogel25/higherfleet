@@ -22,6 +22,7 @@ public partial class BuilderObject_Placeable : Area2D
 	private float _snapDistance = 32.0f;
 	public List<Marker2D> SnapPoints = new List<Marker2D>();
 	private Vector2 _snapPosition = Vector2.Zero;
+	// private bool _isOverlapAreaVisible = false;
 
 	// graph node for this placeable object
 	public ShipGraphNode GraphNode = null;
@@ -63,29 +64,12 @@ public partial class BuilderObject_Placeable : Area2D
 		if (!_isMouseOver) return;
 		if (@event is InputEventMouseButton mouseEvent)
 		{
-			// this will prevent pickup once objects are snapped [[TEMP!]]
-			// if (GetParent() != GetTree().Root)
-			// {
-			// 	return;
-			// }
-
-			// do you want place-on-press or place-on-release?
-			if (!IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+			// is picked up and left mouse button is pressed
+			if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
 			{
-				if (GetParent() == GetTree().Root)
-				{
-					IsSnapped = false;
-				} else if (GetParent() == GetTree().Root.GetNode("Node2D/RootHull"))
-				{
-					IsSnapped = false;
-					Reparent(GetTree().Root);
-				}
-				IsBeingDragged = true;
-				_FollowMouse();
-			} else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
-			{
-				GetNeighbors();
-				if (!IsRoot && _isMouseOver && TryAutoSnap())
+				bool autoSnap = TryAutoSnap();
+				GD.Print("AutoSnap result: " + autoSnap);
+				if (autoSnap && !IsRoot)
 				{
 					
 					Position = _snapPosition;
@@ -97,8 +81,24 @@ public partial class BuilderObject_Placeable : Area2D
 				{
 					Position = GetGlobalMousePosition();
 				}
+				SetOverlapArea_Visible(false);
 				IsBeingDragged = false;
+				return;
 				// GD.Print(Name + " placed at: " + Position);
+			} else if (!IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+			{
+				if (GetParent() == GetTree().Root)
+				{
+					IsSnapped = false;
+				} else if (GetParent() == GetTree().Root.GetNode("Node2D/RootHull"))
+				{
+					IsSnapped = false;
+					Reparent(GetTree().Root);
+				}
+				SetOverlapArea_Visible(true);
+				IsBeingDragged = true;
+				_FollowMouse();
+				return;
 			} else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
 			{
 				if (IsRoot)
@@ -108,6 +108,7 @@ public partial class BuilderObject_Placeable : Area2D
 				}
 				QueueFree();
 				// GD.Print(Name + " discarded.");
+				return;
 			}
 		}
 
@@ -218,6 +219,19 @@ public partial class BuilderObject_Placeable : Area2D
 		}
 
 		return neighbors;		
+	}
+
+	private void SetOverlapArea_Visible(bool isVisible)
+	{
+		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("NeighborCheck")).ToList();
+		foreach (Area2D checker in checkers)
+		{
+			var sprite = checker.GetNode<Sprite2D>("Sprite2D");
+			if (sprite != null)
+			{
+				sprite.Visible = isVisible;
+			}
+		}
 	}
 
 	// this is a hacky and bad way to do this but it has to work for now
