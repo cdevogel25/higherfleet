@@ -195,13 +195,7 @@ public partial class BuilderObject_Placeable : Area2D
 	private bool _WouldOverlap(BuilderObject_Placeable nearestObject, Vector2 offset)
 	{
 		// logic to check for overlap with other objects
-		// there's gotta be a better way to do this using the built-in collision stuff
-		// return OnAreaShapeEntered(nearestObject);
-		// Vector2 thisSize = GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size;
-		// var overlapRect = new Rect2(_snapPosition + RootOffset, thisSize * Scale);
-		// Rect2 otherPosition = nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
-		// otherPosition = new Rect2(nearestObject.GlobalPosition, otherPosition.Size * Scale);
-		Rect2 collider = new Rect2(_snapPosition + offset, this.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size * Scale);
+		Rect2 collider = new Rect2(_snapPosition + offset, GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size * Scale);
 		return nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Intersects(collider);
 	}
 
