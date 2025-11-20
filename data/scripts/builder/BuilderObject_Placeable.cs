@@ -148,7 +148,8 @@ public partial class BuilderObject_Placeable : Area2D
 			// offset is the distance from the center of this tile to the selected snap-from point
 			// snapPosition should be the position of the snap-to point minus the offset, plus the snap-to object's root offset
 			var offset = nearestSnapFrom.Position;
-			_snapPosition = nearestSnapTo.Position - offset + nearestSnapTo.GetParent<BuilderObject_Placeable>().RootOffset; // is this neighbors[0].RootOffset? Try both. 
+			_snapPosition = nearestSnapTo.Position - offset + nearestSnapTo.GetParent<BuilderObject_Placeable>().RootOffset; // is this neighbors[0].RootOffset? Try both.
+			GD.Print(_WouldOverlap(snapToParent, _snapPosition)); 
 			if(!_WouldOverlap(snapToParent, _snapPosition))
 			{
 				if (!IsSnapped && !IsAncestorOf(snapToParent))
@@ -190,10 +191,8 @@ public partial class BuilderObject_Placeable : Area2D
 	{
 		Rect2 thisRect = GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
 		thisRect.Position = snapTo - (thisRect.Size / 2);
-		GD.Print(thisRect.Position);
 		Rect2 nearestRect = nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
-		nearestRect.Position = nearestObject.Position - (nearestRect.Size / 2);
-		GD.Print(nearestRect.Position);
+		GD.Print("This is where you think the snap-to object is: " + nearestRect.Position);
 		return thisRect.Intersects(nearestRect);
 	}
 
