@@ -21,7 +21,6 @@ public partial class BuilderObject_Placeable : Area2D
 
 	public override void _Ready()
 	{
-		GraphNode = new ShipGraphNode(this, IsRoot);
 		foreach (Node2D c in GetChildren())
 		{
 			if (c is Marker2D marker && marker.Name.ToString().StartsWith("Snap"))
@@ -61,8 +60,7 @@ public partial class BuilderObject_Placeable : Area2D
 			{
 				if (IsBeingDragged)
 				{
-					bool autoSnap = TryAutoSnap();
-					if (autoSnap && !IsRoot)
+					if (TryAutoSnap() && !IsRoot)
 					{
 						Position = _snapPosition;
 						RootOffset = Position;
@@ -149,7 +147,6 @@ public partial class BuilderObject_Placeable : Area2D
 			// snapPosition should be the position of the snap-to point minus the offset, plus the snap-to object's root offset
 			var offset = nearestSnapFrom.Position;
 			_snapPosition = nearestSnapTo.Position - offset + nearestSnapTo.GetParent<BuilderObject_Placeable>().RootOffset; // is this neighbors[0].RootOffset? Try both.
-			GD.Print(_WouldOverlap(snapToParent, _snapPosition)); 
 			if(!_WouldOverlap(snapToParent, _snapPosition))
 			{
 				if (!IsSnapped && !IsAncestorOf(snapToParent))
@@ -184,9 +181,6 @@ public partial class BuilderObject_Placeable : Area2D
 		}
 	}
 
-	// _WouldOverlap is not working correctly. Why?
-	// origin of rect2 is the top left stupid (so you need to move it by half size to center it)
-	// but also why is it like that
 	private bool _WouldOverlap(BuilderObject_Placeable nearestObject, Vector2 snapTo)
 	{
 		Rect2 thisRect = GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
