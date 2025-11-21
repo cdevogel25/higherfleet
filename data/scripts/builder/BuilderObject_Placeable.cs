@@ -60,8 +60,8 @@ public partial class BuilderObject_Placeable : Area2D
 			{
 				if (IsBeingDragged)
 				{
-					bool autoSnap = TryAutoSnap();
-					if (autoSnap && !IsRoot)
+					// bool autoSnap = TryAutoSnap();
+					if (TryAutoSnap() && !IsRoot)
 					{
 						Position = _snapPosition;
 						RootOffset = Position;
@@ -143,13 +143,20 @@ public partial class BuilderObject_Placeable : Area2D
 			}
 
 			BuilderObject_Placeable snapToParent = nearestSnapTo.GetParent<BuilderObject_Placeable>();
+			BuilderObject_Placeable root = _FindRoot(snapToParent);
 
 			// offset is the distance from the center of this tile to the selected snap-from point
 			// snapPosition should be the position of the snap-to point minus the offset, plus the snap-to object's root offset
 			var offset = nearestSnapFrom.Position;
 			_snapPosition = nearestSnapTo.Position - offset + nearestSnapTo.GetParent<BuilderObject_Placeable>().RootOffset; // is this neighbors[0].RootOffset? Try both.
-			GD.Print(_WouldOverlap(snapToParent, _snapPosition)); 
+			// GD.Print(_WouldOverlap(snapToParent, _snapPosition));
 			if(!_WouldOverlap(snapToParent, _snapPosition))
+			{
+				// snap and reparent
+				Position = _snapPosition;
+				Reparent(root);
+				return true;
+			} else
 			{
 				if (!IsSnapped && !IsAncestorOf(snapToParent))
 				{
@@ -162,10 +169,16 @@ public partial class BuilderObject_Placeable : Area2D
 		return false;
 	}
 
-	private void _FindRoot()
+	private BuilderObject_Placeable _FindRoot(BuilderObject_Placeable obj)
 	{
 		// the root object will inherit from this class
-		if (IsRoot) return;
+		if (obj.GetParent().GetType() == typeof(BuilderObject_Placeable))
+		{
+			return _FindRoot(obj.GetParent<BuilderObject_Placeable>());
+		} else
+		{
+			return obj;
+		}
 	}
 
 	public void EdgeDetection()
@@ -188,11 +201,18 @@ public partial class BuilderObject_Placeable : Area2D
 	// but also why is it like that
 	private bool _WouldOverlap(BuilderObject_Placeable nearestObject, Vector2 snapTo)
 	{
-		Rect2 thisRect = GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
-		thisRect.Position = snapTo - (thisRect.Size / 2);
-		Rect2 nearestRect = nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
-		nearestRect.Position = nearestObject.GlobalPosition - (nearestRect.Size / 2);
-		return thisRect.Intersects(nearestRect);
+		Area2D tempArea = new Area2D();
+		tempArea.AddChild(GetNode<CollisionShape2D>("ObjectCollisionShape").Duplicate());
+		tempArea.Position = snapTo;
+		var overlappingAreas = tempArea.GetOverlappingAreas();
+		foreach (var area in overlappingAreas)
+		{
+			if (area is BuilderObject_Placeable placeable && placeable != this)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public List<BuilderObject_Placeable> GetNeighbors()
