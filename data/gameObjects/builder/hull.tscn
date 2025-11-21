@@ -41,56 +41,56 @@ position = Vector2(0, 128)
 [node name="SnapW" type="Marker2D" parent="."]
 position = Vector2(-128, 0)
 
-[node name="NeighborCheckEast" type="Area2D" parent="."]
+[node name="CheckEast" type="Area2D" parent="."]
 position = Vector2(192, 0)
 monitorable = false
 
-[node name="Sprite2D" type="Sprite2D" parent="NeighborCheckEast"]
+[node name="Sprite2D" type="Sprite2D" parent="CheckEast"]
 rotation = 1.5707964
 scale = Vector2(0.93, 0.9)
 texture = ExtResource("3_twle2")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NeighborCheckEast"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckEast"]
 position = Vector2(0.5, 0)
 scale = Vector2(0.9999997, 0.9999997)
 shape = SubResource("RectangleShape2D_twle2")
 
-[node name="NeighborCheckWest" type="Area2D" parent="."]
+[node name="CheckWest" type="Area2D" parent="."]
 position = Vector2(-192, 0)
 monitorable = false
 
-[node name="Sprite2D" type="Sprite2D" parent="NeighborCheckWest"]
+[node name="Sprite2D" type="Sprite2D" parent="CheckWest"]
 rotation = 1.5707964
 scale = Vector2(0.93, 0.9)
 texture = ExtResource("3_twle2")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NeighborCheckWest"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckWest"]
 position = Vector2(-0.5, 0)
 scale = Vector2(0.9999997, 0.9999997)
 shape = SubResource("RectangleShape2D_rdc2r")
 
-[node name="NeighborCheckNorth" type="Area2D" parent="."]
+[node name="CheckNorth" type="Area2D" parent="."]
 position = Vector2(0, -192)
 monitorable = false
 
-[node name="Sprite2D" type="Sprite2D" parent="NeighborCheckNorth"]
+[node name="Sprite2D" type="Sprite2D" parent="CheckNorth"]
 scale = Vector2(0.93, 0.9)
 texture = ExtResource("3_twle2")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NeighborCheckNorth"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckNorth"]
 position = Vector2(0, -0.5)
 scale = Vector2(0.9999995, 0.9999995)
 shape = SubResource("RectangleShape2D_xppqw")
 
-[node name="NeighborCheckSouth" type="Area2D" parent="."]
+[node name="CheckSouth" type="Area2D" parent="."]
 position = Vector2(0, 192)
 monitorable = false
 
-[node name="Sprite2D" type="Sprite2D" parent="NeighborCheckSouth"]
+[node name="Sprite2D" type="Sprite2D" parent="CheckSouth"]
 scale = Vector2(0.93, 0.9)
 texture = ExtResource("3_twle2")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NeighborCheckSouth"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckSouth"]
 scale = Vector2(0.9999995, 0.9999995)
 shape = SubResource("RectangleShape2D_p8j7p")
 

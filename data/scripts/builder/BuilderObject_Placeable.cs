@@ -21,6 +21,7 @@ public partial class BuilderObject_Placeable : Area2D
 
 	public override void _Ready()
 	{
+		GraphNode = new ShipGraphNode(this);
 		foreach (Node2D c in GetChildren())
 		{
 			if (c is Marker2D marker && marker.Name.ToString().StartsWith("Snap"))
@@ -158,9 +159,11 @@ public partial class BuilderObject_Placeable : Area2D
 				return true;
 			} else
 			{
+				// i dont think this is right
 				if (!IsSnapped && !IsAncestorOf(snapToParent))
 				{
 					Reparent(GetTree().Root.GetNode("Node2D/RootHull"));
+					GD.Print("Reparented to: " + GetTree().Root.GetNode("Node2D/RootHull"));
 				}
 				return true;
 			}
@@ -172,7 +175,7 @@ public partial class BuilderObject_Placeable : Area2D
 	private BuilderObject_Placeable _FindRoot(BuilderObject_Placeable obj)
 	{
 		// the root object will inherit from this class
-		if (obj.GetParent().GetType() == typeof(BuilderObject_Placeable))
+		if (obj.GetParent() is BuilderObject_Placeable)
 		{
 			return _FindRoot(obj.GetParent<BuilderObject_Placeable>());
 		} else
@@ -217,7 +220,7 @@ public partial class BuilderObject_Placeable : Area2D
 
 	public List<BuilderObject_Placeable> GetNeighbors()
 	{
-		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("NeighborCheck")).ToList();
+		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
 
 		List<BuilderObject_Placeable> neighbors = new List<BuilderObject_Placeable>();
 
@@ -228,17 +231,18 @@ public partial class BuilderObject_Placeable : Area2D
 			{
 				if (area is BuilderObject_Placeable placeable && placeable != this)
 				{
+					GraphNode.AddNeighbor(checker.Name.ToString()[6..], placeable.GraphNode);
 					neighbors.Add(placeable);
 				}
 			}
 		}
-
+		GD.Print("Found " + neighbors.Count + " neighbor(s).");
 		return neighbors;		
 	}
 
 	private void SetOverlapArea_Visible(bool isVisible)
 	{
-		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("NeighborCheck")).ToList();
+		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
 		foreach (Area2D checker in checkers)
 		{
 			var sprite = checker.GetNode<Sprite2D>("Sprite2D");
