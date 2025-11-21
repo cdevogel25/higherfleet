@@ -1,29 +1,27 @@
 using Godot;
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public partial class BuilderObject_Placeable : Area2D
 {
 	// what do other objects need to know about a placeable object?
-	// is it snapped in place?
 	public bool IsSnapped = false;
-	// is it connected to the root object?
-	public bool IsConnectedToRoot = false;
-	// is it being dragged?
 	public bool IsBeingDragged = false;
-	// is it dropped?
 	public bool IsDropped = false;
 	public bool IsRoot = false;
+	public Vector2 RootOffset = Vector2.Zero;
 	
-	// ignore spawn click
-	private bool _ignoreInitialLeftClick = true;
 	private bool _isMouseOver = false;
-	private float _snapDistance = 32.0f;
 	public List<Marker2D> SnapPoints = new List<Marker2D>();
 	private Vector2 _snapPosition = Vector2.Zero;
+	// private bool _isOverlapAreaVisible = false;
+
+	// graph node for this placeable object
+	public ShipGraphNode GraphNode = null;
 
 	public override void _Ready()
 	{
+		GraphNode = new ShipGraphNode(this);
 		foreach (Node2D c in GetChildren())
 		{
 			if (c is Marker2D marker && marker.Name.ToString().StartsWith("Snap"))
@@ -49,52 +47,60 @@ public partial class BuilderObject_Placeable : Area2D
 	// method skeletons
 	public override void _Input(InputEvent @event)
 	{
+		// [TODO]
 		// left mouse will pick up a single tile (if not the root tile)
 		// right mouse will cancel placement of a currently-dragged tile
 		// right mouse will pick up a tile that is already placed and all its connected tiles
 		// right mouse will also pick up the root tile and connected tiles if any exist
 
-		// ok now is the time to fix input
 		if (!_isMouseOver) return;
+
 		if (@event is InputEventMouseButton mouseEvent)
 		{
-			// this will prevent pickup once objects are snapped [[TEMP!]]
-			if (GetParent() != GetTree().Root)
+			if (mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
 			{
-				return;
-			}
-
-			// do you want place-on-press or place-on-release?
-			if (!IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
-			{
-				if (GetParent() == GetTree().Root)
+				if (IsBeingDragged)
 				{
-					IsSnapped = false;
-				}
-				IsBeingDragged = true;
-				_FollowMouse();
-			} else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
-			{
-				if (!IsRoot && _isMouseOver && TryAutoSnap())
-				{
-					Position = _snapPosition;
-					IsSnapped = true;
-				}
-				else
-				{
-					Position = GetGlobalMousePosition();
-				}
-				IsBeingDragged = false;
-				// GD.Print(Name + " placed at: " + Position);
-			} else if (IsBeingDragged && mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
-			{
-				if (IsRoot)
-				{
+					// bool autoSnap = TryAutoSnap();
+					if (TryAutoSnap() && !IsRoot)
+					{
+						Position = _snapPosition;
+						RootOffset = Position;
+						IsSnapped = true;
+					} else
+					{
+						Position = GetGlobalMousePosition();
+					}
+					SetOverlapArea_Visible(false);
 					IsBeingDragged = false;
 					return;
+				} else
+				{
+					if (GetParent() == GetTree().Root)
+					{
+						IsSnapped = false;
+					} else if (GetParent() == GetTree().Root.GetNode("Node2D/RootHull"))
+					{
+						IsSnapped = false;
+						Reparent(GetTree().Root);
+					}
+					SetOverlapArea_Visible(true);
+					IsBeingDragged = true;
+					_FollowMouse();
+					return;
 				}
-				QueueFree();
-				// GD.Print(Name + " discarded.");
+			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
+			{
+				if (IsBeingDragged)
+				{
+					if (IsRoot)
+					{
+						IsBeingDragged = false;
+						return;
+					}
+					QueueFree();
+					return;
+				}
 			}
 		}
 
@@ -106,49 +112,58 @@ public partial class BuilderObject_Placeable : Area2D
 
 	public bool TryAutoSnap()
 	{
-		// you need new snapping logic, cuz what you have
-		// in Hull.cs is not good
-		var allTiles = GetTree().GetNodesInGroup("BuilderObjectsPlaceable");
+		// logic to find nearest snap point on nearby placeable objects
+		// check in order: north, east, south, west
 
-		BuilderObject_Placeable nearestObject = null;
-		Marker2D nearestSnapFrom = null;
-		Marker2D nearestSnapTo = null;
-		List<Marker2D> snapToPoints;
+		// first: get all neighbors
+		// then: for the first (if any) neighbor, get its snap points
+		// then: check distance from this object to each of neighbor's snap points
+		// then: snap to the closest snap point and reparent.
+		List <BuilderObject_Placeable> neighbors = new List<BuilderObject_Placeable>();
+		neighbors = GetNeighbors();
 
-		float nearestDistance = float.MaxValue;
-
-		foreach (BuilderObject_Placeable tile in allTiles)
+		if (neighbors.Count > 0)
 		{
-			if (tile == this) continue;
-			snapToPoints = tile.SnapPoints;
+			List<Marker2D> potentialSnapPoints = neighbors[0].SnapPoints;
+			float distance = float.MaxValue;
+			Marker2D nearestSnapTo = null;
+			Marker2D nearestSnapFrom = null;
 
 			foreach (Marker2D snapFrom in SnapPoints)
 			{
-				foreach (Marker2D snapTo in snapToPoints)
+				foreach (Marker2D snapTo in potentialSnapPoints)
 				{
-					float distance = snapFrom.GlobalPosition.DistanceTo(snapTo.GlobalPosition);
-
-					if (distance < nearestDistance && distance <= _snapDistance)
+					float currentDistance = snapFrom.GlobalPosition.DistanceTo(snapTo.GlobalPosition);
+					if (currentDistance < distance)
 					{
-						nearestDistance = distance;
-						nearestObject = tile;
-
-						nearestSnapFrom = snapFrom;
+						distance = currentDistance;
 						nearestSnapTo = snapTo;
+						nearestSnapFrom = snapFrom;
 					}
 				}
 			}
-		}
 
-		if (nearestObject != null && nearestDistance <= _snapDistance)
-		{
-			if (!_WouldOverlap(nearestObject))
+			BuilderObject_Placeable snapToParent = nearestSnapTo.GetParent<BuilderObject_Placeable>();
+			BuilderObject_Placeable root = _FindRoot(snapToParent);
+
+			// offset is the distance from the center of this tile to the selected snap-from point
+			// snapPosition should be the position of the snap-to point minus the offset, plus the snap-to object's root offset
+			var offset = nearestSnapFrom.Position;
+			_snapPosition = nearestSnapTo.Position - offset + nearestSnapTo.GetParent<BuilderObject_Placeable>().RootOffset; // is this neighbors[0].RootOffset? Try both.
+			// GD.Print(_WouldOverlap(snapToParent, _snapPosition));
+			if(!_WouldOverlap(snapToParent, _snapPosition))
 			{
-				// find best snap position
-				Vector2 offset = nearestSnapFrom.Position;
-				_snapPosition = nearestSnapTo.Position - offset;
-				if (!IsSnapped && !IsAncestorOf(nearestObject)) {
-					Reparent(nearestObject);
+				// snap and reparent
+				Position = _snapPosition;
+				Reparent(root);
+				return true;
+			} else
+			{
+				// i dont think this is right
+				if (!IsSnapped && !IsAncestorOf(snapToParent))
+				{
+					Reparent(GetTree().Root.GetNode("Node2D/RootHull"));
+					GD.Print("Reparented to: " + GetTree().Root.GetNode("Node2D/RootHull"));
 				}
 				return true;
 			}
@@ -157,13 +172,16 @@ public partial class BuilderObject_Placeable : Area2D
 		return false;
 	}
 
-
-
-	private void _FindRoot()
+	private BuilderObject_Placeable _FindRoot(BuilderObject_Placeable obj)
 	{
 		// the root object will inherit from this class
-		if (IsRoot) return;
-		// logic to find and connect to root object
+		if (obj.GetParent() is BuilderObject_Placeable)
+		{
+			return _FindRoot(obj.GetParent<BuilderObject_Placeable>());
+		} else
+		{
+			return obj;
+		}
 	}
 
 	public void EdgeDetection()
@@ -181,20 +199,60 @@ public partial class BuilderObject_Placeable : Area2D
 		}
 	}
 
-	private bool _WouldOverlap(BuilderObject_Placeable nearestObject)
+	// _WouldOverlap is not working correctly. Why?
+	// origin of rect2 is the top left stupid (so you need to move it by half size to center it)
+	// but also why is it like that
+	private bool _WouldOverlap(BuilderObject_Placeable nearestObject, Vector2 snapTo)
 	{
-		// logic to check for overlap with other objects
-		// there's gotta be a better way to do this using the built-in collision stuff
-
-		Vector2 thisSize = GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect().Size;
-		var overlapRect = new Rect2(_snapPosition, thisSize * Scale);
-		Rect2 otherPosition = nearestObject.GetNode<CollisionShape2D>("ObjectCollisionShape").Shape.GetRect();
-		otherPosition = new Rect2(nearestObject.GlobalPosition, otherPosition.Size * Scale);
-
-		return overlapRect.Intersects(otherPosition);
+		Area2D tempArea = new Area2D();
+		tempArea.AddChild(GetNode<CollisionShape2D>("ObjectCollisionShape").Duplicate());
+		tempArea.Position = snapTo;
+		var overlappingAreas = tempArea.GetOverlappingAreas();
+		foreach (var area in overlappingAreas)
+		{
+			if (area is BuilderObject_Placeable placeable && placeable != this)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
-	// this is a hacky and bad way to do this but it has to work for now
+	public List<BuilderObject_Placeable> GetNeighbors()
+	{
+		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
+
+		List<BuilderObject_Placeable> neighbors = new List<BuilderObject_Placeable>();
+
+		foreach (Area2D checker in checkers)
+		{
+			var overlappingAreas = checker.GetOverlappingAreas();
+			foreach (var area in overlappingAreas)
+			{
+				if (area is BuilderObject_Placeable placeable && placeable != this)
+				{
+					GraphNode.AddNeighbor(checker.Name.ToString()[6..], placeable.GraphNode);
+					neighbors.Add(placeable);
+				}
+			}
+		}
+		GD.Print("Found " + neighbors.Count + " neighbor(s).");
+		return neighbors;		
+	}
+
+	private void SetOverlapArea_Visible(bool isVisible)
+	{
+		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
+		foreach (Area2D checker in checkers)
+		{
+			var sprite = checker.GetNode<Sprite2D>("Sprite2D");
+			if (sprite != null)
+			{
+				sprite.Visible = isVisible;
+			}
+		}
+	}
+
 	private void OnMouseEntered()
 	{
 		_isMouseOver = true;
