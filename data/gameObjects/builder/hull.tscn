@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://fv7yglb02tg1"]
+[gd_scene load_steps=10 format=3 uid="uid://fv7yglb02tg1"]
 
 [ext_resource type="Script" uid="uid://l2yxggp25tyd" path="res://data/scripts/builder/Hull.cs" id="1_d7ri1"]
-[ext_resource type="Texture2D" uid="uid://bi4i7evc2ql8j" path="res://assets/mockup/ShipMockup.png" id="1_e17hn"]
+[ext_resource type="Texture2D" uid="uid://c2nag86pa3wtm" path="res://assets/mockup/Hull.png" id="2_twle2"]
 [ext_resource type="Texture2D" uid="uid://dvh65jqriwkqd" path="res://assets/mockup/OverlapChecker.png" id="3_twle2"]
+[ext_resource type="PackedScene" uid="uid://dr27kc4f67ob0" path="res://data/gameObjects/builder/components/subcomponents/snapPoint_external.tscn" id="4_rdc2r"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_d7ri1"]
 size = Vector2(258.00006, 256)
@@ -24,22 +25,10 @@ scale = Vector2(0.2, 0.2)
 script = ExtResource("1_d7ri1")
 
 [node name="HullSprite" type="Sprite2D" parent="."]
-texture = ExtResource("1_e17hn")
+texture = ExtResource("2_twle2")
 
 [node name="ObjectCollisionShape" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_d7ri1")
-
-[node name="SnapN" type="Marker2D" parent="."]
-position = Vector2(0, -128)
-
-[node name="SnapE" type="Marker2D" parent="."]
-position = Vector2(128, 0)
-
-[node name="SnapS" type="Marker2D" parent="."]
-position = Vector2(0, 128)
-
-[node name="SnapW" type="Marker2D" parent="."]
-position = Vector2(-128, 0)
 
 [node name="CheckEast" type="Area2D" parent="."]
 position = Vector2(192, 0)
@@ -93,6 +82,18 @@ texture = ExtResource("3_twle2")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CheckSouth"]
 scale = Vector2(0.9999995, 0.9999995)
 shape = SubResource("RectangleShape2D_p8j7p")
+
+[node name="SnapPoint_External_West" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(-128, 0)
+
+[node name="SnapPoint_External_South" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(0, 128)
+
+[node name="SnapPoint_External_East" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(128, 0)
+
+[node name="SnapPoint_External_North" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(0, -128)
 
 [connection signal="mouse_entered" from="." to="." method="OnMouseEntered"]
 [connection signal="mouse_exited" from="." to="." method="OnMouseExited"]

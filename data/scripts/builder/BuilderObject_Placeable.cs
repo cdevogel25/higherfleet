@@ -67,6 +67,7 @@ public partial class BuilderObject_Placeable : Area2D
 						Position = _snapPosition;
 						RootOffset = Position;
 						IsSnapped = true;
+						_DrawRootLine();
 					} else
 					{
 						Position = GetGlobalMousePosition();
@@ -82,8 +83,10 @@ public partial class BuilderObject_Placeable : Area2D
 					} else if (GetParent() == GetTree().Root.GetNode("Node2D/RootHull"))
 					{
 						IsSnapped = false;
-						Reparent(GetTree().Root);
+						Reparent(GetTree().Root.GetNode("Node2D"));
 					}
+					_EraseRootLine();
+					RootOffset = Vector2.Zero;
 					SetOverlapArea_Visible(true);
 					IsBeingDragged = true;
 					_FollowMouse();
@@ -119,8 +122,7 @@ public partial class BuilderObject_Placeable : Area2D
 		// then: for the first (if any) neighbor, get its snap points
 		// then: check distance from this object to each of neighbor's snap points
 		// then: snap to the closest snap point and reparent.
-		List <BuilderObject_Placeable> neighbors = new List<BuilderObject_Placeable>();
-		neighbors = GetNeighbors();
+		List <BuilderObject_Placeable> neighbors = GetNeighbors();
 
 		if (neighbors.Count > 0)
 		{
@@ -144,7 +146,7 @@ public partial class BuilderObject_Placeable : Area2D
 			}
 
 			BuilderObject_Placeable snapToParent = nearestSnapTo.GetParent<BuilderObject_Placeable>();
-			BuilderObject_Placeable root = _FindRoot(snapToParent);
+			Node2D root = _FindRoot(snapToParent);
 
 			// offset is the distance from the center of this tile to the selected snap-from point
 			// snapPosition should be the position of the snap-to point minus the offset, plus the snap-to object's root offset
@@ -154,15 +156,22 @@ public partial class BuilderObject_Placeable : Area2D
 			if(!_WouldOverlap(snapToParent, _snapPosition))
 			{
 				// snap and reparent
+				if(!IsAncestorOf(snapToParent))
+				{
+					Position = _snapPosition;
+					Reparent(snapToParent);
+					return true;
+				}
 				Position = _snapPosition;
 				Reparent(root);
 				return true;
 			} else
 			{
 				// i dont think this is right
+				// afaik doesn't do anything, but let's see
 				if (!IsSnapped && !IsAncestorOf(snapToParent))
 				{
-					Reparent(GetTree().Root.GetNode("Node2D/RootHull"));
+					Reparent(snapToParent);
 					GD.Print("Reparented to: " + GetTree().Root.GetNode("Node2D/RootHull"));
 				}
 				return true;
@@ -172,15 +181,17 @@ public partial class BuilderObject_Placeable : Area2D
 		return false;
 	}
 
-	private BuilderObject_Placeable _FindRoot(BuilderObject_Placeable obj)
+	private Node2D _FindRoot(Node2D obj)
 	{
-		// the root object will inherit from this class
-		if (obj.GetParent() is BuilderObject_Placeable)
-		{
-			return _FindRoot(obj.GetParent<BuilderObject_Placeable>());
-		} else
+		if (obj is RootHull)
 		{
 			return obj;
+		} else if (obj.GetParent() == GetTree().Root)
+		{
+			return GetTree().Root.GetNode("Node2D") as Node2D;
+		} else
+		{
+			return _FindRoot(obj.GetParent<Node2D>());
 		}
 	}
 
@@ -261,5 +272,30 @@ public partial class BuilderObject_Placeable : Area2D
 	private void OnMouseExited()
 	{
 		_isMouseOver = false;
+	}
+
+	private void _DrawRootLine()
+	{
+		if (IsRoot)
+		{
+			return;
+		}
+		Line2D line = new Line2D();
+		line.Position = Vector2.Zero;
+		line.DefaultColor = Colors.Red;
+		line.Width = 10.0f;
+		line.AddPoint(-RootOffset);
+		line.AddPoint(Vector2.Zero);
+		line.SetVisibilityLayerBit(1, true);
+		AddChild(line);
+	}
+
+	private void _EraseRootLine()
+	{
+		var lines = GetChildren().OfType<Line2D>().ToList();
+		foreach (var line in lines)
+		{
+			line.QueueFree();
+		}
 	}
 }
