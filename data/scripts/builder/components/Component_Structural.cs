@@ -54,7 +54,7 @@ public partial class Component_Structural : Component
 			}
 		}
 
-		if (@event is InputEventMouseMotion mouseMotionEvent)
+		if (@event is InputEventMouseMotion)
 		{
 			if (_IsBeingDragged)
 			{
@@ -86,7 +86,7 @@ public partial class Component_Structural : Component
 						if (!externalSnapFrom.IsOccupied)
 						{
 							// check distance between snap points
-							float currentDistance = externalSnapFrom.Position.DistanceTo(externalSnapTo.Position);
+							float currentDistance = externalSnapFrom.GlobalPosition.DistanceTo(externalSnapTo.GlobalPosition);
 							if (currentDistance < distance)
 							{
 								distance = currentDistance;
@@ -97,7 +97,6 @@ public partial class Component_Structural : Component
 					}
 				}
 			}
-			GD.Print("Found nearby bridge for snapping.");
 		} else
 		{
 			foreach (Component_Structural structural in nearbyStructurals)
@@ -133,15 +132,14 @@ public partial class Component_Structural : Component
 		// you have found the nearest snap point. now check for overlap and do the positioning math
 		// the new position 
 
-		var offset = Position - bestSnapFrom.Position;
+		var offset = bestSnapFrom.Position; 
 
-		if (bestSnapTo.GetParent<Component>() is Component_Bridge)
+		if (bestSnapTo.GetParent<Component>() is Component_Structural)
 		{
-			_snapPosition = bestSnapTo.GetParent<Component_Bridge>().Position + offset;
-		}
-		else
+			_snapPosition = bestSnapTo.GetParent<Component>().Position + bestSnapTo.Position - offset;
+		} else
 		{
-			_snapPosition = bestSnapTo.GetParent<Component>().Position + bestSnapTo.Position - bestSnapFrom.Position;
+			_snapPosition = bestSnapTo.Position - offset;
 		}
 
 
