@@ -4,32 +4,27 @@ using Godot;
 
 public partial class Component : Area2D
 {
-    // possibly not needed, we'll see
-    public GraphNode GraphNode = null;
-    protected bool _IsMouseOver = false;
-    protected bool _IsBeingDragged = false;
-    protected bool _IsSnapped = false;
+	// possibly not needed, we'll see
+	public GraphNode GraphNode = null;
+	protected bool _IsMouseOver = false;
+	protected bool _IsBeingDragged = false;
+	protected bool _IsSnapped = false;
 
-    public override void _Ready()
-    {
-        
-    }
+	protected void _OnMouseEntered()
+	{
+		_IsMouseOver = true;
+	}
 
-    protected void _OnMouseEntered()
-    {
-        _IsMouseOver = true;
-    }
+	protected void _OnMouseExited()
+	{
+		_IsMouseOver = false;
+	}
 
-    protected void _OnMouseExited()
-    {
-        _IsMouseOver = false;
-    }
-
-    protected void _FollowMouse()
-    {
-        if (_IsBeingDragged)
-        {
-            GlobalPosition = GetGlobalMousePosition();
-        }
-    }
+	protected void _FollowMouse()
+	{
+		if (_IsBeingDragged)
+		{
+			GlobalPosition = GetGlobalMousePosition();
+		}
+	}
 }

@@ -1,14 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://dy6p3h1w2kpn"]
+[gd_scene load_steps=5 format=3 uid="uid://dy6p3h1w2kpn"]
 
 [ext_resource type="Texture2D" uid="uid://dguvksxampfwf" path="res://assets/mockup/BridgeMockup.png" id="1_4xlv6"]
-[ext_resource type="Script" uid="uid://nssm8mchv6f" path="res://data/scripts/builder/RootHull.cs" id="1_6devj"]
+[ext_resource type="Script" uid="uid://c5m0ltqtwea1r" path="res://data/scripts/builder/components/Component.cs" id="1_32ma5"]
+[ext_resource type="PackedScene" uid="uid://dr27kc4f67ob0" path="res://data/gameObjects/builder/components/subcomponents/snapPoint_external.tscn" id="3_32ma5"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6devj"]
 size = Vector2(256, 256)
 
 [node name="RootHull" type="Area2D" groups=["BuilderObjectsPlaceable"]]
 scale = Vector2(0.2, 0.2)
-script = ExtResource("1_6devj")
+script = ExtResource("1_32ma5")
 
 [node name="BridgeSprite" type="Sprite2D" parent="."]
 texture = ExtResource("1_4xlv6")
@@ -16,16 +17,16 @@ texture = ExtResource("1_4xlv6")
 [node name="ObjectCollisionShape" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_6devj")
 
-[node name="SnapN" type="Marker2D" parent="."]
+[node name="SnapPoint_External_North" parent="." instance=ExtResource("3_32ma5")]
 position = Vector2(0, -128)
 
-[node name="SnapE" type="Marker2D" parent="."]
+[node name="SnapPoint_External_East" parent="." instance=ExtResource("3_32ma5")]
 position = Vector2(128, 0)
 
-[node name="SnapS" type="Marker2D" parent="."]
+[node name="SnapPoint_External_South" parent="." instance=ExtResource("3_32ma5")]
 position = Vector2(0, 128)
 
-[node name="SnapW" type="Marker2D" parent="."]
+[node name="SnapPoint_External_West" parent="." instance=ExtResource("3_32ma5")]
 position = Vector2(-128, 0)
 
 [connection signal="mouse_entered" from="." to="." method="OnMouseEntered"]

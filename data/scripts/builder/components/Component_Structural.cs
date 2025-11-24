@@ -1,86 +1,235 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 public partial class Component_Structural : Component
 {
-    // for structural components (pretty much just hull tiles,
-    // but I want to keep them separate from things like electronics, weapons, storage componets, etc.)
-    public HashSet<SnapPoint_External> ExternalSnapPoints = new HashSet<SnapPoint_External>();
-    public HashSet<SnapPoint_Internal> InternalSnapPoints = new HashSet<SnapPoint_Internal>();
-    public override void _Ready()
-    {
-        _IsBeingDragged = true;
-        _IsMouseOver = true;
-        _FollowMouse();
-        _CollectSnapPoints();
-    }
+	// for structural components (pretty much just hull tiles,
+	// but I want to keep them separate from things like electronics, weapons, storage componets, etc.)
+	public HashSet<SnapPoint_External> ExternalSnapPoints = new HashSet<SnapPoint_External>();
+	public HashSet<SnapPoint_Internal> InternalSnapPoints = new HashSet<SnapPoint_Internal>();
+	private Vector2 _snapPosition = Vector2.Zero;  
+	public override void _Ready()
+	{
+		_IsBeingDragged = true;
+		_IsMouseOver = true;
+		_CollectSnapPoints();
+		_FollowMouse();
+	}
 
-    public override void _Input(InputEvent @event)
-    {
-        if (!_IsMouseOver) return;
+	public override void _Input(InputEvent @event)
+	{
+		if (!_IsMouseOver) return;
 
-        if (@event is InputEventMouseButton mouseEvent)
-        {
-            if (_IsBeingDragged)
-            {
-                //try autosnap (make a new autosnap)
-                // otherwise drop at mouse position
-            }
-        }
-    }
+		if (@event is InputEventMouseButton mouseEvent)
+		{
+			if (mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+			{
+				//try autosnap (make a new autosnap)
+				// otherwise drop at mouse position
+				if (_IsBeingDragged)
+				{
+					if (_TrySnap_Structural())
+					{
+						Position = _snapPosition;
+						_IsSnapped = true;
+					}
+					SetOverlapArea_Visible(false);
+					_IsBeingDragged = false;
+					return;
+				} else
+				{
+					SetOverlapArea_Visible(true);
+					_IsBeingDragged = true;
+					_FollowMouse();
+					return;
+				}
+			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
+			{
+				if (_IsBeingDragged)
+				{
+					QueueFree();
+					return;
+				}
+			}
+		}
 
-    private bool _TrySnap_Structural()
-    {
-        List<Component_Structural> nearbyStructurals = GetNearbyStructurals();
-        float distance = float.MaxValue;
-        SnapPoint_External bestSnapFrom = null;
-        SnapPoint_External bestSnapTo = null;
-        // get nearest unoccupied external snap point
-        
-        foreach (Component_Structural structural in nearbyStructurals)
-        {
-            foreach (SnapPoint_External externalSnapTo in structural.ExternalSnapPoints)
-            {
-                if (!externalSnapTo.IsOccupied)
-                {
-                    foreach (SnapPoint_External externalSnapFrom in ExternalSnapPoints)
-                    {
-                        if (!externalSnapFrom.IsOccupied)
-                        {
-                            // check distance between snap points
-                            float currentDistance = externalSnapFrom.Position.DistanceTo(externalSnapTo.Position);
-                            if (currentDistance < distance)
-                            {
-                                distance = currentDistance;
-                                bestSnapFrom = externalSnapFrom;
-                                bestSnapTo = externalSnapTo;
-                            }
-                        }
-                    }
-                }
-            }   
-        }
+		if (@event is InputEventMouseMotion mouseMotionEvent)
+		{
+			if (_IsBeingDragged)
+			{
+				_FollowMouse();
+			}
+		}
+	}
 
-        return false;
-    }
+	private bool _TrySnap_Structural()
+	{
+		List<Component_Structural> nearbyStructurals = GetNearbyStructurals();
+		float distance = float.MaxValue;
+		SnapPoint_External bestSnapFrom = null;
+		SnapPoint_External bestSnapTo = null;
+		// get nearest unoccupied external snap point
+		Component_Bridge nearbyBridge = GetNearbyBridge();
 
-    public List<Component_Structural> GetNearbyStructurals()
-    {
-        return null;
-    }
+		GD.Print("Nearby bridge: " + nearbyBridge);
 
-    private void _CollectSnapPoints()
-    {
-        foreach (Node2D c in GetChildren())
-        {
-            if (c is SnapPoint_External externalSnap)
-            {
-                ExternalSnapPoints.Add(externalSnap);
-            }
-            else if (c is SnapPoint_Internal internalSnap)
-            {
-                InternalSnapPoints.Add(internalSnap);
-            }
-        }
-    }
+		if (nearbyBridge != null)
+		{
+			foreach (SnapPoint_External externalSnapTo in nearbyBridge.ExternalSnapPoints)
+			{
+				if (!externalSnapTo.IsOccupied)
+				{
+					foreach (SnapPoint_External externalSnapFrom in ExternalSnapPoints)
+					{
+						if (!externalSnapFrom.IsOccupied)
+						{
+							// check distance between snap points
+							float currentDistance = externalSnapFrom.Position.DistanceTo(externalSnapTo.Position);
+							if (currentDistance < distance)
+							{
+								distance = currentDistance;
+								bestSnapFrom = externalSnapFrom;
+								bestSnapTo = externalSnapTo;
+							}
+						}
+					}
+				}
+			}
+			GD.Print("Found nearby bridge for snapping.");
+		} else
+		{
+			foreach (Component_Structural structural in nearbyStructurals)
+			{
+				foreach (SnapPoint_External externalSnapTo in structural.ExternalSnapPoints)
+				{
+					if (!externalSnapTo.IsOccupied)
+					{
+						foreach (SnapPoint_External externalSnapFrom in ExternalSnapPoints)
+						{
+							if (!externalSnapFrom.IsOccupied)
+							{
+								// check distance between snap points
+								float currentDistance = externalSnapFrom.Position.DistanceTo(externalSnapTo.Position);
+								if (currentDistance < distance)
+								{
+									distance = currentDistance;
+									bestSnapFrom = externalSnapFrom;
+									bestSnapTo = externalSnapTo;
+								}
+							}
+						}
+					}
+				}  
+			}
+		}
+		
+		if (bestSnapFrom == null || bestSnapTo == null)
+		{
+			return false; // no available snap points found
+		}
+
+		// you have found the nearest snap point. now check for overlap and do the positioning math
+		var offset = bestSnapTo.Position;
+		_snapPosition = offset + (Position - bestSnapFrom.Position);
+
+		GD.Print("_snapPosition: " + _snapPosition);
+
+		if (!_WouldOverlap(_snapPosition))
+		{
+			Position = _snapPosition;
+			bestSnapFrom.SetIsOccupied();
+			bestSnapTo.SetIsOccupied();
+			_IsSnapped = true;
+			return true;
+		}
+
+		return false;
+	}
+
+	private bool _WouldOverlap(Vector2 snapTo)
+	{
+		Area2D tempArea = new Area2D();
+		tempArea.AddChild(GetNode<CollisionShape2D>("ObjectCollisionShape").Duplicate());
+		tempArea.Position = snapTo;
+		var overlappingBodies = tempArea.GetOverlappingAreas();
+		foreach (var body in overlappingBodies)
+		{
+			if (body is Component_Structural structural && structural != this)
+			{
+				GD.Print("Overlapping with structural: " + structural);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public Component_Bridge GetNearbyBridge()
+	{
+		List<Area2D> overlapChecks = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
+		// these have to be either Component_Structural or Component_Bridge
+		// how to do that? for now just structural
+		foreach (Area2D check in overlapChecks)
+		{
+			var overlappingAreas = check.GetOverlappingAreas();
+			foreach (var area in overlappingAreas)
+			{
+				if (area is Component_Bridge bridge)
+				{
+					GD.Print("Found nearby bridge: " + bridge);
+					return bridge;
+				}
+			}
+		}
+		return null;
+	}
+
+	public List<Component_Structural> GetNearbyStructurals()
+	{
+		List<Area2D> overlapChecks = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
+		// these have to be either Component_Structural or Component_Bridge
+		// how to do that? for now just structural
+		List<Component_Structural> nearbyStructurals = new List<Component_Structural>();
+
+		foreach (Area2D check in overlapChecks)
+		{
+			var overlappingAreas = check.GetOverlappingAreas();
+			foreach (var area in overlappingAreas)
+			{
+				if (area is Component_Structural structural && structural != this)
+				{
+					nearbyStructurals.Add(structural);
+				}
+			}
+		}
+		return nearbyStructurals;
+	}
+
+	private void _CollectSnapPoints()
+	{
+		foreach (Node2D c in GetChildren())
+		{
+			if (c is SnapPoint_External externalSnap)
+			{
+				ExternalSnapPoints.Add(externalSnap);
+			}
+			else if (c is SnapPoint_Internal internalSnap)
+			{
+				InternalSnapPoints.Add(internalSnap);
+			}
+		}
+	}
+
+	private void SetOverlapArea_Visible(bool isVisible)
+	{
+		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
+		foreach (Area2D checker in checkers)
+		{
+			var sprite = checker.GetNode<Sprite2D>("Sprite2D");
+			if (sprite != null)
+			{
+				sprite.Visible = isVisible;
+			}
+		}
+	}
 }

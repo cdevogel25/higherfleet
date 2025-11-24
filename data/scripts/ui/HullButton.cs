@@ -1,10 +1,8 @@
 using Godot;
-using System;
-using System.Collections.Generic;
 
 public partial class HullButton : Control
 {
-	private Hull hull;
+	private Component_Structural hull;
 	private PackedScene hullScene;
 	private bool _isDragging = false;
 	private int hullIndex = 0;
@@ -15,9 +13,9 @@ public partial class HullButton : Control
 	}
 	private void OnPressed()
 	{
-		hull = hullScene.Instantiate<Hull>();
+		hull = hullScene.Instantiate<Component_Structural>();
 		hull.Name = "Hull_" + hullIndex++;
-		GetTree().Root.AddChild(hull);
+		GetTree().CurrentScene.AddChild(hull);
 		GD.Print(hull.Name + " created.");
 	}
 }
