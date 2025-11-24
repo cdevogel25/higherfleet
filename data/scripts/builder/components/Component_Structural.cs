@@ -32,11 +32,35 @@ public partial class Component_Structural : Component
     private bool _TrySnap_Structural()
     {
         List<Component_Structural> nearbyStructurals = GetNearbyStructurals();
+        float distance = float.MaxValue;
+        SnapPoint_External bestSnapFrom = null;
+        SnapPoint_External bestSnapTo = null;
+        // get nearest unoccupied external snap point
         
-        if (nearbyStructurals.Count > 0)
+        foreach (Component_Structural structural in nearbyStructurals)
         {
-            // float distance = float.MaxValue;
+            foreach (SnapPoint_External externalSnapTo in structural.ExternalSnapPoints)
+            {
+                if (!externalSnapTo.IsOccupied)
+                {
+                    foreach (SnapPoint_External externalSnapFrom in ExternalSnapPoints)
+                    {
+                        if (!externalSnapFrom.IsOccupied)
+                        {
+                            // check distance between snap points
+                            float currentDistance = externalSnapFrom.Position.DistanceTo(externalSnapTo.Position);
+                            if (currentDistance < distance)
+                            {
+                                distance = currentDistance;
+                                bestSnapFrom = externalSnapFrom;
+                                bestSnapTo = externalSnapTo;
+                            }
+                        }
+                    }
+                }
+            }   
         }
+
         return false;
     }
 
