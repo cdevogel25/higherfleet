@@ -152,6 +152,7 @@ public partial class Component_Structural : Component
 			return true;
 		}
 
+
 		return false;
 	}
 

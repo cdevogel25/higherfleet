@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://fv7yglb02tg1"]
 
-[ext_resource type="Script" uid="uid://bhbqc83qqthh6" path="res://data/scripts/builder/components/Component_Structural.cs" id="1_rdc2r"]
+[ext_resource type="Script" uid="uid://bhbqc83qqthh6" path="res://data/scripts/builder/components/external/Component_Structural.cs" id="1_rdc2r"]
 [ext_resource type="Texture2D" uid="uid://c2nag86pa3wtm" path="res://assets/mockup/Hull.png" id="2_twle2"]
 [ext_resource type="Texture2D" uid="uid://dvh65jqriwkqd" path="res://assets/mockup/OverlapChecker.png" id="3_twle2"]
 [ext_resource type="PackedScene" uid="uid://dr27kc4f67ob0" path="res://data/gameObjects/builder/components/subcomponents/snapPoint_external.tscn" id="4_rdc2r"]

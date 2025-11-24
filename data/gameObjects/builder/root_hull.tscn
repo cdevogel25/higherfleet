@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://dy6p3h1w2kpn"]
 
 [ext_resource type="Texture2D" uid="uid://dguvksxampfwf" path="res://assets/mockup/BridgeMockup.png" id="1_4xlv6"]
-[ext_resource type="Script" uid="uid://cpw5ntw3384xd" path="res://data/scripts/builder/components/Component_Bridge.cs" id="1_32ma5"]
+[ext_resource type="Script" uid="uid://cpw5ntw3384xd" path="res://data/scripts/builder/components/external/Component_Bridge.cs" id="1_32ma5"]
 [ext_resource type="PackedScene" uid="uid://dr27kc4f67ob0" path="res://data/gameObjects/builder/components/subcomponents/snapPoint_external.tscn" id="3_32ma5"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6devj"]
