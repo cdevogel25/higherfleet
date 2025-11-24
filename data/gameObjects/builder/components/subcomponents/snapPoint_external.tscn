@@ -1,6 +1,12 @@
-[gd_scene load_steps=2 format=3 uid="uid://dr27kc4f67ob0"]
+[gd_scene load_steps=3 format=3 uid="uid://dr27kc4f67ob0"]
 
 [ext_resource type="Script" uid="uid://d3x0pv16dnsu1" path="res://data/scripts/builder/components/subcomponents/SnapPoint_External.cs" id="1_48su8"]
+[ext_resource type="Shape2D" uid="uid://dbepec38deyhf" path="res://data/gameObjects/builder/components/subcomponents/snapPoint_Collision.tres" id="2_vlpof"]
 
-[node name="SnapPoint_External" type="Marker2D"]
+[node name="snapPoint_External" type="Area2D"]
 script = ExtResource("1_48su8")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = ExtResource("2_vlpof")
+
+[node name="Marker2D" type="Marker2D" parent="."]

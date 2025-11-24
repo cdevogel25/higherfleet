@@ -29,5 +29,5 @@ position = Vector2(0, 128)
 [node name="SnapPoint_External_West" parent="." instance=ExtResource("3_32ma5")]
 position = Vector2(-128, 0)
 
-[connection signal="mouse_entered" from="." to="." method="OnMouseEntered"]
-[connection signal="mouse_exited" from="." to="." method="OnMouseExited"]
+[connection signal="mouse_entered" from="." to="." method="_OnMouseEntered"]
+[connection signal="mouse_exited" from="." to="." method="_OnMouseExited"]

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using Godot;
 
 public partial class Component_Structural : Component
@@ -39,6 +40,7 @@ public partial class Component_Structural : Component
 					return;
 				} else
 				{
+					_OnPickup();
 					SetOverlapArea_Visible(true);
 					_IsBeingDragged = true;
 					_FollowMouse();
@@ -239,6 +241,58 @@ public partial class Component_Structural : Component
 			{
 				sprite.Visible = isVisible;
 			}
+		}
+	}
+
+	private void _OnPickup()
+	{
+		// when picked up, free up any occupied snap points
+		foreach (var snap in ExternalSnapPoints)
+		{
+			if (snap.IsOccupied)
+			{
+				snap.SetIsUnoccupied();
+			}
+		}
+		// free neighboring snap points that this was snapped to
+		List<Component_Structural> nearbyStructurals = GetNearbyStructurals();
+		Component_Bridge nearbyBridge = GetNearbyBridge();
+		List<Area2D> overlapDetectors = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
+
+		if (nearbyBridge != null)
+        {
+			foreach (var snap in nearbyBridge.ExternalSnapPoints)
+            {
+                foreach (Area2D detector in overlapDetectors)
+				{
+					var overlappingAreas = detector.GetOverlappingAreas();
+					foreach (var area in overlappingAreas)
+					{
+						if (area is SnapPoint_External otherSnap && otherSnap == snap && snap.IsOccupied)
+						{
+							snap.SetIsUnoccupied();
+						}
+					}
+				}
+            }
+        }
+
+		foreach (Component_Structural structural in nearbyStructurals)
+		{
+			foreach (var snap in structural.ExternalSnapPoints)
+            {
+				foreach (Area2D detector in overlapDetectors)
+				{
+					var overlappingAreas = detector.GetOverlappingAreas();
+					foreach (var area in overlappingAreas)
+					{
+						if (area is SnapPoint_External otherSnap && otherSnap == snap && snap.IsOccupied)
+						{
+							snap.SetIsUnoccupied();
+						}
+					}
+				}
+            }
 		}
 	}
 }
