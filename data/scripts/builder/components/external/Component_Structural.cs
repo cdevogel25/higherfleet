@@ -40,7 +40,6 @@ public partial class Component_Structural : Component
 					return;
 				} else
 				{
-					// _OnPickup();
 					SetOverlapArea_Visible(true);
 					_IsBeingDragged = true;
 					_FollowMouse();
@@ -129,6 +128,30 @@ public partial class Component_Structural : Component
 		if (bestSnapFrom == null || bestSnapTo == null)
 		{
 			return false; // no available snap points found
+		} else if (bestSnapFrom.Name.ToString().EndsWith('N'))
+		{
+			if (!bestSnapTo.Name.ToString().EndsWith('S'))
+			{
+				return false;
+			}
+		} else if (bestSnapFrom.Name.ToString().EndsWith('S'))
+		{
+			if (!bestSnapTo.Name.ToString().EndsWith('N'))
+			{
+				return false;
+			}
+		} else if (bestSnapFrom.Name.ToString().EndsWith('E'))
+		{
+			if (!bestSnapTo.Name.ToString().EndsWith('W'))
+			{
+				return false;
+			}
+		} else if (bestSnapFrom.Name.ToString().EndsWith('W'))
+		{
+			if (!bestSnapTo.Name.ToString().EndsWith('E'))
+			{
+				return false;
+			}
 		}
 
 		// you have found the nearest snap point. now check for overlap and do the positioning math
@@ -168,11 +191,11 @@ public partial class Component_Structural : Component
 		{
 			if (body is Component_Structural structural && structural != this)
 			{
-				GD.Print("Overlapping with structural: " + structural);
+				GD.Print("Would overlap with structural: " + structural);
 				return true;
 			} else if (body is Component_Bridge bridge)
 			{
-				GD.Print("Overlapping with bridge: " + bridge);
+				GD.Print("Would overlap with bridge: " + bridge);
 				return true;
 			}
 		}
