@@ -40,7 +40,7 @@ public partial class Component_Structural : Component
 					return;
 				} else
 				{
-					_OnPickup();
+					// _OnPickup();
 					SetOverlapArea_Visible(true);
 					_IsBeingDragged = true;
 					_FollowMouse();
@@ -170,6 +170,10 @@ public partial class Component_Structural : Component
 			{
 				GD.Print("Overlapping with structural: " + structural);
 				return true;
+			} else if (body is Component_Bridge bridge)
+			{
+				GD.Print("Overlapping with bridge: " + bridge);
+				return true;
 			}
 		}
 		return false;
@@ -255,32 +259,42 @@ public partial class Component_Structural : Component
 			}
 		}
 		// free neighboring snap points that this was snapped to
+		// do I need to change the collision layer of snap points and overlap detectors?
 		List<Component_Structural> nearbyStructurals = GetNearbyStructurals();
+		GD.Print("Nearby structurals count on pickup: " + nearbyStructurals.Count);
+		HashSet<SnapPoint_External> nearbyBridgeSnapPoints = null;
 		Component_Bridge nearbyBridge = GetNearbyBridge();
+		if (nearbyBridge != null)
+		{
+			nearbyBridgeSnapPoints = nearbyBridge.ExternalSnapPoints;
+		}
 		List<Area2D> overlapDetectors = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
 
-		if (nearbyBridge != null)
-        {
-			foreach (var snap in nearbyBridge.ExternalSnapPoints)
-            {
-                foreach (Area2D detector in overlapDetectors)
-				{
-					var overlappingAreas = detector.GetOverlappingAreas();
-					foreach (var area in overlappingAreas)
-					{
-						if (area is SnapPoint_External otherSnap && otherSnap == snap && snap.IsOccupied)
-						{
-							snap.SetIsUnoccupied();
-						}
-					}
-				}
-            }
-        }
+		if (nearbyStructurals.Count == 0 && nearbyBridgeSnapPoints == null)
+		{
+			return;
+		}
+
+		// foreach (SnapPoint_External snap in nearbyBridgeSnapPoints)
+		// {
+		// 	foreach (Area2D detector in overlapDetectors)
+		// 	{
+		// 		if (detector.OverlapsArea(snap))
+		// 		{
+		// 			GD.Print("Freeing snap point on bridge: " + snap);
+		// 			if (snap.IsOccupied)
+		// 			{
+		// 				snap.SetIsUnoccupied();
+		// 			}
+		// 		}
+		// 	}
+		// }
+		// use signals for this but how?
 
 		foreach (Component_Structural structural in nearbyStructurals)
 		{
 			foreach (var snap in structural.ExternalSnapPoints)
-            {
+			{
 				foreach (Area2D detector in overlapDetectors)
 				{
 					var overlappingAreas = detector.GetOverlappingAreas();
@@ -292,7 +306,7 @@ public partial class Component_Structural : Component
 						}
 					}
 				}
-            }
+			}
 		}
 	}
 }

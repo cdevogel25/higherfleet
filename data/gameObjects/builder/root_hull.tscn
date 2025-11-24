@@ -18,16 +18,20 @@ texture = ExtResource("1_4xlv6")
 shape = SubResource("RectangleShape2D_6devj")
 
 [node name="SnapPoint_External_North" parent="." instance=ExtResource("3_32ma5")]
-position = Vector2(0, -128)
+position = Vector2(0, -127.99998)
+scale = Vector2(0.9999998, 0.9999998)
 
 [node name="SnapPoint_External_East" parent="." instance=ExtResource("3_32ma5")]
-position = Vector2(128, 0)
+position = Vector2(127.99998, 0)
+scale = Vector2(0.9999998, 0.9999998)
 
 [node name="SnapPoint_External_South" parent="." instance=ExtResource("3_32ma5")]
-position = Vector2(0, 128)
+position = Vector2(0, 127.99998)
+scale = Vector2(0.9999998, 0.9999998)
 
 [node name="SnapPoint_External_West" parent="." instance=ExtResource("3_32ma5")]
-position = Vector2(-128, 0)
+position = Vector2(-127.99998, 0)
+scale = Vector2(0.9999998, 0.9999998)
 
 [connection signal="mouse_entered" from="." to="." method="_OnMouseEntered"]
 [connection signal="mouse_exited" from="." to="." method="_OnMouseExited"]

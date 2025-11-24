@@ -24,4 +24,20 @@ public partial class SnapPoint_External : Area2D
 		GD.Print("Snap point " + Name + " of " + GetParent<Component>().Name + " is now unoccupied.");
 		IsOccupied = false;
 	}
+
+	public void _OnAreaEntered(Area2D area)
+	{
+		if (area is SnapPoint_External snapPoint && snapPoint.GetParent<Component>() != this.GetParent<Component>())
+		{
+			SetIsOccupied();
+		}
+	}
+
+	public void _OnAreaExited(Area2D area)
+	{
+		if (area is SnapPoint_External snapPoint && snapPoint.GetParent<Component>() != this.GetParent<Component>())
+		{
+			SetIsUnoccupied();
+		}
+	}
 }

@@ -10,3 +10,6 @@ script = ExtResource("1_48su8")
 shape = ExtResource("2_vlpof")
 
 [node name="Marker2D" type="Marker2D" parent="."]
+
+[connection signal="area_entered" from="." to="." method="_OnAreaEntered"]
+[connection signal="area_exited" from="." to="." method="_OnAreaExited"]
