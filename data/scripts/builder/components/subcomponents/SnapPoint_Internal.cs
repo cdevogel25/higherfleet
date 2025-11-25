@@ -2,7 +2,7 @@ using Godot;
 
 public partial class SnapPoint_Internal : Marker2D
 {
-	// marker for external snap points (ones that can connect to other components)
+	// marker for internal snap points (ones that internal components can snap to)
 	public bool IsOccupied;
 	public bool isInternal;
 	public bool isExternal;

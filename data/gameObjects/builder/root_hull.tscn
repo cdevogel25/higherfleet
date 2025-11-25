@@ -7,9 +7,10 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6devj"]
 size = Vector2(256, 256)
 
-[node name="RootHull" type="Area2D" groups=["BuilderObjectsPlaceable"]]
+[node name="RootHull" type="Area2D" groups=["BuilderObjectsPlaceable", "RootBridge"]]
 scale = Vector2(0.2, 0.2)
 script = ExtResource("1_32ma5")
+ComponentPath = NodePath(".")
 
 [node name="BridgeSprite" type="Sprite2D" parent="."]
 texture = ExtResource("1_4xlv6")

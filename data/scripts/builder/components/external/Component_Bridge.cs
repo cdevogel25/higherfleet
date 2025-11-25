@@ -1,18 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using Godot;
 using Builder.Components.External;
 
 public partial class Component_Bridge : Component
 {
-	// public HashSet<SnapPoint_External> ExternalSnapPoints = new HashSet<SnapPoint_External>();
-	public SnapPoint_Directional ExternalSnapPoints = new SnapPoint_Directional();
+	[Export]
+	public NodePath ComponentPath;
 
 	public override void _Ready()
 	{
+		ComponentPath = GetPath();
 		_IsBeingDragged = false;
 		_IsMouseOver = false;
-		_CollectSnapPoints();
+		_CollectExternalSnapPoints();
 	}
 
 	public override void _Input(InputEvent @event)
@@ -23,7 +22,7 @@ public partial class Component_Bridge : Component
 		{
 			if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
 			{
-				if(_IsBeingDragged)
+				if (_IsBeingDragged)
 				{
 					_IsBeingDragged = false;
 					return;
@@ -42,22 +41,6 @@ public partial class Component_Bridge : Component
 			{
 				_FollowMouse();
 			}
-		}
-	}
-	private void _CollectSnapPoints()
-	{
-		foreach (var child in GetChildren())
-		{
-			if (child is SnapPoint_External snapPoint)
-            {
-                switch (snapPoint.Name)
-                {
-                    case "SnapPoint_External_North": ExternalSnapPoints.North = snapPoint; break;
-					case "SnapPoint_External_South": ExternalSnapPoints.South = snapPoint; break;
-					case "SnapPoint_External_East": ExternalSnapPoints.East = snapPoint; break;
-					case "SnapPoint_External_West": ExternalSnapPoints.West = snapPoint; break;
-                }
-            }
 		}
 	}
 }
