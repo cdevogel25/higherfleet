@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using Godot;
 
 public partial class Component_Structural : Component
@@ -9,7 +8,7 @@ public partial class Component_Structural : Component
 	// but I want to keep them separate from things like electronics, weapons, storage componets, etc.)
 	public HashSet<SnapPoint_External> ExternalSnapPoints = new HashSet<SnapPoint_External>();
 	public HashSet<SnapPoint_Internal> InternalSnapPoints = new HashSet<SnapPoint_Internal>();
-	private Vector2 _snapPosition = Vector2.Zero;  
+	private Vector2 _snapPosition = Vector2.Zero;
 	public override void _Ready()
 	{
 		_IsBeingDragged = true;
