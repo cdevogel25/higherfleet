@@ -52,18 +52,10 @@ public partial class Component_Bridge : Component
             {
                 switch (snapPoint.Name)
                 {
-                    case "SnapPoint_External_North":
-						ExternalSnapPoints.North = snapPoint;
-						break;
-					case "SnapPoint_External_South":
-						ExternalSnapPoints.South = snapPoint;
-						break;
-					case "SnapPoint_External_East":
-						ExternalSnapPoints.East = snapPoint;
-						break;
-					case "SnapPoint_External_West":
-						ExternalSnapPoints.West = snapPoint;
-						break;
+                    case "SnapPoint_External_North": ExternalSnapPoints.North = snapPoint; break;
+					case "SnapPoint_External_South": ExternalSnapPoints.South = snapPoint; break;
+					case "SnapPoint_External_East": ExternalSnapPoints.East = snapPoint; break;
+					case "SnapPoint_External_West": ExternalSnapPoints.West = snapPoint; break;
                 }
             }
 		}

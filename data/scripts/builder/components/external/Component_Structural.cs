@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Builder.Components.External;
 
 public partial class Component_Structural : Component
 {
 	// for structural components (pretty much just hull tiles,
 	// but I want to keep them separate from things like electronics, weapons, storage componets, etc.)
-	public HashSet<SnapPoint_External> ExternalSnapPoints = new HashSet<SnapPoint_External>();
-	public HashSet<SnapPoint_Internal> InternalSnapPoints = new HashSet<SnapPoint_Internal>();
+	public SnapPoint_Directional ExternalSnapPoints = new SnapPoint_Directional();
 	private Vector2 _snapPosition = Vector2.Zero;
 	public override void _Ready()
 	{
@@ -76,36 +76,48 @@ public partial class Component_Structural : Component
 		GD.Print("Nearby structurals count: " + nearbyStructurals.Count);
 
 		if (nearbyBridge != null)
-		{
-			foreach (SnapPoint_External externalSnapTo in nearbyBridge.ExternalSnapPoints)
-			{
-				if (!externalSnapTo.IsOccupied)
-				{
-					foreach (SnapPoint_External externalSnapFrom in ExternalSnapPoints)
-					{
-						if (!externalSnapFrom.IsOccupied)
-						{
-							// check distance between snap points
-							float currentDistance = externalSnapFrom.GlobalPosition.DistanceTo(externalSnapTo.GlobalPosition);
-							if (currentDistance < distance)
-							{
-								distance = currentDistance;
-								bestSnapFrom = externalSnapFrom;
-								bestSnapTo = externalSnapTo;
-							}
-						}
-					}
-				}
-			}
+        {
+            // only check the opposing snap points for connection (e.g. if snapping from this north, only check south on the other)
+			foreach (Face face in new Face[] { Face.North, Face.South, Face.East, Face.West })
+            {
+				if (ExternalSnapPoints.TryGet(face, out SnapPoint_External externalSnapFrom) && !externalSnapFrom.IsOccupied)
+                {
+					Face? oppositeFace = ExternalSnapPoints.Opposite(face);
+					if (oppositeFace.HasValue && nearbyBridge.ExternalSnapPoints.TryGet(oppositeFace.Value, out SnapPoint_External externalSnapTo) && !externalSnapTo.IsOccupied)
+                    {
+                        // help
+                    }
+                }
+        }
+			// foreach (SnapPoint_External externalSnapTo in nearbyBridge.ExternalSnapPoints.All)
+			// {
+			// 	if (!externalSnapTo.IsOccupied)
+			// 	{
+			// 		foreach (SnapPoint_External externalSnapFrom in ExternalSnapPoints.All)
+			// 		{
+			// 			if (!externalSnapFrom.IsOccupied)
+			// 			{
+			// 				// check distance between snap points
+			// 				float currentDistance = externalSnapFrom.GlobalPosition.DistanceTo(externalSnapTo.GlobalPosition);
+			// 				if (currentDistance < distance)
+			// 				{
+			// 					distance = currentDistance;
+			// 					bestSnapFrom = externalSnapFrom;
+			// 					bestSnapTo = externalSnapTo;
+			// 				}
+			// 			}
+			// 		}
+			// 	}
+			// }
 		} else
 		{
 			foreach (Component_Structural structural in nearbyStructurals)
 			{
-				foreach (SnapPoint_External externalSnapTo in structural.ExternalSnapPoints)
+				foreach (SnapPoint_External externalSnapTo in structural.ExternalSnapPoints.All)
 				{
 					if (!externalSnapTo.IsOccupied)
 					{
-						foreach (SnapPoint_External externalSnapFrom in ExternalSnapPoints)
+						foreach (SnapPoint_External externalSnapFrom in ExternalSnapPoints.All)
 						{
 							if (!externalSnapFrom.IsOccupied)
 							{
@@ -244,15 +256,17 @@ public partial class Component_Structural : Component
 
 	private void _CollectSnapPoints()
 	{
-		foreach (Node2D c in GetChildren())
+		foreach (var child in GetChildren())
 		{
-			if (c is SnapPoint_External externalSnap)
+			if (child is SnapPoint_External snapPoint)
 			{
-				ExternalSnapPoints.Add(externalSnap);
-			}
-			else if (c is SnapPoint_Internal internalSnap)
-			{
-				InternalSnapPoints.Add(internalSnap);
+				switch (snapPoint.Name)
+				{
+					case "SnapPoint_External_North": ExternalSnapPoints.North = snapPoint; break;
+					case "SnapPoint_External_South": ExternalSnapPoints.South = snapPoint; break;
+					case "SnapPoint_External_East": ExternalSnapPoints.East = snapPoint; break;
+					case "SnapPoint_External_West": ExternalSnapPoints.West = snapPoint; break;
+				}
 			}
 		}
 	}
@@ -273,7 +287,7 @@ public partial class Component_Structural : Component
 	private void _OnPickup()
 	{
 		// when picked up, free up any occupied snap points
-		foreach (var snap in ExternalSnapPoints)
+		foreach (var snap in ExternalSnapPoints.All)
 		{
 			if (snap.IsOccupied)
 			{
@@ -288,7 +302,7 @@ public partial class Component_Structural : Component
 		Component_Bridge nearbyBridge = GetNearbyBridge();
 		if (nearbyBridge != null)
 		{
-			nearbyBridgeSnapPoints = nearbyBridge.ExternalSnapPoints;
+			nearbyBridgeSnapPoints = nearbyBridge.ExternalSnapPoints.All.ToHashSet();
 		}
 		List<Area2D> overlapDetectors = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
 
@@ -297,25 +311,9 @@ public partial class Component_Structural : Component
 			return;
 		}
 
-		// foreach (SnapPoint_External snap in nearbyBridgeSnapPoints)
-		// {
-		// 	foreach (Area2D detector in overlapDetectors)
-		// 	{
-		// 		if (detector.OverlapsArea(snap))
-		// 		{
-		// 			GD.Print("Freeing snap point on bridge: " + snap);
-		// 			if (snap.IsOccupied)
-		// 			{
-		// 				snap.SetIsUnoccupied();
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// use signals for this but how?
-
 		foreach (Component_Structural structural in nearbyStructurals)
 		{
-			foreach (var snap in structural.ExternalSnapPoints)
+			foreach (var snap in structural.ExternalSnapPoints.All)
 			{
 				foreach (Area2D detector in overlapDetectors)
 				{
