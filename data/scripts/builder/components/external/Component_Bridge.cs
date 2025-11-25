@@ -22,25 +22,17 @@ public partial class Component_Bridge : Component
 		{
 			if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
 			{
+				_IsBeingDragged = !_IsBeingDragged;
 				if (_IsBeingDragged)
-				{
-					_IsBeingDragged = false;
-					return;
-				} else
-				{
-					_IsBeingDragged = true;
-					_FollowMouse();
-					return;
-				}
+                {
+                    _FollowMouse();
+                }
 			}
 		}
 
-		if (@event is InputEventMouseMotion)
+		if (@event is InputEventMouseMotion && _IsBeingDragged)
 		{
-			if (_IsBeingDragged)
-			{
-				_FollowMouse();
-			}
+			_FollowMouse();
 		}
 	}
 }

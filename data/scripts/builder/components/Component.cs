@@ -1,3 +1,4 @@
+using System.Linq;
 using Builder.Components.External;
 using Godot;
 
@@ -30,17 +31,14 @@ public partial class Component : Area2D
 
 	protected void _CollectExternalSnapPoints()
     {
-        foreach (var child in GetChildren())
+        foreach (var child in GetChildren().OfType<SnapPoint_External>())
 		{
-			if (child is SnapPoint_External snapPoint)
+			switch (child.Name)
 			{
-				switch (snapPoint.Name)
-				{
-					case "SnapPoint_External_North": ExternalSnapPoints.North = snapPoint; break;
-					case "SnapPoint_External_South": ExternalSnapPoints.South = snapPoint; break;
-					case "SnapPoint_External_East": ExternalSnapPoints.East = snapPoint; break;
-					case "SnapPoint_External_West": ExternalSnapPoints.West = snapPoint; break;
-				}
+				case "SnapPoint_External_North": ExternalSnapPoints.North = child; break;
+				case "SnapPoint_External_South": ExternalSnapPoints.South = child; break;
+				case "SnapPoint_External_East": ExternalSnapPoints.East = child; break;
+				case "SnapPoint_External_West": ExternalSnapPoints.West = child; break;
 			}
 		}
     }

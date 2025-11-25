@@ -46,22 +46,16 @@ public partial class Component_Structural : Component
 					_FollowMouse();
 					return;
 				}
-			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
+			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed && _IsBeingDragged)
 			{
-				if (_IsBeingDragged)
-				{
-					QueueFree();
-					return;
-				}
+				QueueFree();
+				return;
 			}
 		}
 
-		if (@event is InputEventMouseMotion)
+		if (@event is InputEventMouseMotion && _IsBeingDragged)
 		{
-			if (_IsBeingDragged)
-			{
-				_FollowMouse();
-			}
+			_FollowMouse();
 		}
 	}
 
@@ -130,14 +124,9 @@ public partial class Component_Structural : Component
 		// the new position 
 
 		var offset = bestSnapFrom.Position; 
-
-		if (bestSnapTo.GetParent<Component>() is Component_Structural)
-		{
-			_snapPosition = bestSnapTo.GetParent<Component>().Position + bestSnapTo.Position - offset;
-		} else
-		{
-			_snapPosition = bestSnapTo.Position - offset;
-		}
+		_snapPosition = (bestSnapTo.GetParent<Component>() is Component_Structural) ?
+			bestSnapTo.GetParent<Component>().Position + bestSnapTo.Position - offset :
+			bestSnapTo.Position - offset;
 
 
 		if (!_WouldOverlap(_snapPosition))
@@ -186,13 +175,10 @@ public partial class Component_Structural : Component
 		foreach (Area2D overlap in _overlapDetectors)
 		{
 			var overlappingAreas = overlap.GetOverlappingAreas();
-			foreach (var area in overlappingAreas)
+			foreach (var area in overlappingAreas.OfType<Component_Bridge>())
 			{
-				if (area is Component_Bridge bridge)
-				{
-					GD.Print("Found nearby bridge: " + bridge);
-					return bridge;
-				}
+				GD.Print("Found nearby bridge: " + area);
+				return area;
 			}
 		}
 		return null;
@@ -204,18 +190,10 @@ public partial class Component_Structural : Component
 		// how to do that? for now just structural
 		List<Component_Structural> nearbyStructurals = new List<Component_Structural>();
 
-		foreach (Area2D overlap in _overlapDetectors)
-		{
-			var overlappingAreas = overlap.GetOverlappingAreas();
-			foreach (var area in overlappingAreas)
-			{
-				if (area is Component_Structural structural && structural != this)
-				{
-					nearbyStructurals.Add(structural);
-				}
-			}
-		}
-		return nearbyStructurals;
+		return _overlapDetectors.SelectMany(overlap => overlap.GetOverlappingAreas().OfType<Component_Structural>())
+			   .Where(structural => structural != this)
+			   .Distinct()
+			   .ToList();
 	}
 
 	private void _CollectOverlapAreas()
@@ -282,12 +260,9 @@ public partial class Component_Structural : Component
 				foreach (Area2D detector in overlapDetectors)
 				{
 					var overlappingAreas = detector.GetOverlappingAreas();
-					foreach (var area in overlappingAreas)
+					foreach (var otherSnap in overlappingAreas.OfType<SnapPoint_External>().Where(os => os == snap && snap.IsOccupied))
 					{
-						if (area is SnapPoint_External otherSnap && otherSnap == snap && snap.IsOccupied)
-						{
-							snap.SetIsUnoccupied();
-						}
+						snap.SetIsUnoccupied();
 					}
 				}
 			}
