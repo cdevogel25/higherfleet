@@ -1,5 +1,5 @@
-using System;
-using System.Collections.Generic;
+using System.Linq;
+using Builder.Components.External;
 using Godot;
 
 public partial class Component : Area2D
@@ -9,6 +9,7 @@ public partial class Component : Area2D
 	protected bool _IsMouseOver = false;
 	protected bool _IsBeingDragged = false;
 	protected bool _IsSnapped = false;
+	public SnapPoint_Directional ExternalSnapPoints = new SnapPoint_Directional();
 
 	protected void _OnMouseEntered()
 	{
@@ -27,4 +28,18 @@ public partial class Component : Area2D
 			GlobalPosition = GetGlobalMousePosition();
 		}
 	}
+
+	protected void _CollectExternalSnapPoints()
+    {
+        foreach (var child in GetChildren().OfType<SnapPoint_External>())
+		{
+			switch (child.Name)
+			{
+				case "SnapPoint_External_North": ExternalSnapPoints.North = child; break;
+				case "SnapPoint_External_South": ExternalSnapPoints.South = child; break;
+				case "SnapPoint_External_East": ExternalSnapPoints.East = child; break;
+				case "SnapPoint_External_West": ExternalSnapPoints.West = child; break;
+			}
+		}
+    }
 }

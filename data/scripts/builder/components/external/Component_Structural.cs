@@ -6,15 +6,16 @@ using Builder.Components.External;
 public partial class Component_Structural : Component
 {
 	// for structural components (pretty much just hull tiles,
-	// but I want to keep them separate from things like electronics, weapons, storage componets, etc.)
-	public SnapPoint_Directional ExternalSnapPoints = new SnapPoint_Directional();
+	// but I want to keep them separate from things like electronics, weapons, storage components, etc.)
 	public OverlapArea_Directional OverlapAreas = new OverlapArea_Directional();
 	private Vector2 _snapPosition = Vector2.Zero;
+	private List<Area2D> _overlapDetectors = new List<Area2D>();
 	public override void _Ready()
 	{
 		_IsBeingDragged = true;
 		_IsMouseOver = true;
-		_CollectSnapPoints();
+		_CollectExternalSnapPoints();
+		_CollectOverlapAreas();
 		_FollowMouse();
 	}
 
@@ -45,22 +46,16 @@ public partial class Component_Structural : Component
 					_FollowMouse();
 					return;
 				}
-			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
+			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed && _IsBeingDragged)
 			{
-				if (_IsBeingDragged)
-				{
-					QueueFree();
-					return;
-				}
+				QueueFree();
+				return;
 			}
 		}
 
-		if (@event is InputEventMouseMotion)
+		if (@event is InputEventMouseMotion && _IsBeingDragged)
 		{
-			if (_IsBeingDragged)
-			{
-				_FollowMouse();
-			}
+			_FollowMouse();
 		}
 	}
 
@@ -129,14 +124,9 @@ public partial class Component_Structural : Component
 		// the new position 
 
 		var offset = bestSnapFrom.Position; 
-
-		if (bestSnapTo.GetParent<Component>() is Component_Structural)
-		{
-			_snapPosition = bestSnapTo.GetParent<Component>().Position + bestSnapTo.Position - offset;
-		} else
-		{
-			_snapPosition = bestSnapTo.Position - offset;
-		}
+		_snapPosition = (bestSnapTo.GetParent<Component>() is Component_Structural) ?
+			bestSnapTo.GetParent<Component>().Position + bestSnapTo.Position - offset :
+			bestSnapTo.Position - offset;
 
 
 		if (!_WouldOverlap(_snapPosition))
@@ -152,42 +142,43 @@ public partial class Component_Structural : Component
 		return false;
 	}
 
+	// this might not be necessary anymore
 	private bool _WouldOverlap(Vector2 snapTo)
 	{
 		Area2D tempArea = new Area2D();
 		tempArea.AddChild(GetNode<CollisionShape2D>("ObjectCollisionShape").Duplicate());
 		tempArea.Position = snapTo;
+		GetParent().AddChild(tempArea);
 		var overlappingBodies = tempArea.GetOverlappingAreas();
+		bool result = false;
 		foreach (var body in overlappingBodies)
 		{
 			if (body is Component_Structural structural && structural != this)
 			{
 				GD.Print("Would overlap with structural: " + structural);
-				return true;
+				result = true;
 			} else if (body is Component_Bridge bridge)
 			{
 				GD.Print("Would overlap with bridge: " + bridge);
-				return true;
+				result = true;
 			}
 		}
-		return false;
+		GetParent().RemoveChild(tempArea);
+		tempArea.QueueFree();
+		return result;
 	}
 
 	public Component_Bridge GetNearbyBridge()
 	{
-		List<Area2D> overlapChecks = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
 		// these have to be either Component_Structural or Component_Bridge
 		// how to do that? for now just structural
-		foreach (Area2D check in overlapChecks)
+		foreach (Area2D overlap in _overlapDetectors)
 		{
-			var overlappingAreas = check.GetOverlappingAreas();
-			foreach (var area in overlappingAreas)
+			var overlappingAreas = overlap.GetOverlappingAreas();
+			foreach (var area in overlappingAreas.OfType<Component_Bridge>())
 			{
-				if (area is Component_Bridge bridge)
-				{
-					GD.Print("Found nearby bridge: " + bridge);
-					return bridge;
-				}
+				GD.Print("Found nearby bridge: " + area);
+				return area;
 			}
 		}
 		return null;
@@ -195,65 +186,39 @@ public partial class Component_Structural : Component
 
 	public List<Component_Structural> GetNearbyStructurals()
 	{
-		List<Area2D> overlapChecks = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
 		// these have to be either Component_Structural or Component_Bridge
 		// how to do that? for now just structural
 		List<Component_Structural> nearbyStructurals = new List<Component_Structural>();
 
-		foreach (Area2D check in overlapChecks)
-		{
-			var overlappingAreas = check.GetOverlappingAreas();
-			foreach (var area in overlappingAreas)
-			{
-				if (area is Component_Structural structural && structural != this)
-				{
-					nearbyStructurals.Add(structural);
-				}
-			}
-		}
-		return nearbyStructurals;
-	}
-
-	private void _CollectSnapPoints()
-	{
-		foreach (var child in GetChildren())
-		{
-			if (child is SnapPoint_External snapPoint)
-			{
-				switch (snapPoint.Name)
-				{
-					case "SnapPoint_External_North": ExternalSnapPoints.North = snapPoint; break;
-					case "SnapPoint_External_South": ExternalSnapPoints.South = snapPoint; break;
-					case "SnapPoint_External_East": ExternalSnapPoints.East = snapPoint; break;
-					case "SnapPoint_External_West": ExternalSnapPoints.West = snapPoint; break;
-				}
-			}
-		}
+		return _overlapDetectors.SelectMany(overlap => overlap.GetOverlappingAreas().OfType<Component_Structural>())
+			   .Where(structural => structural != this)
+			   .Distinct()
+			   .ToList();
 	}
 
 	private void _CollectOverlapAreas()
-    {
-        foreach (var child in GetChildren())
-        {
-            if (child is Area2D area && area.Name.ToString().StartsWith("Check"))
-            {
-                switch (area.Name)
-				{
-					case "Check_North": OverlapAreas.North = area; break;
-					case "Check_South": OverlapAreas.South = area; break;
-					case "Check_East": OverlapAreas.East = area; break;
-					case "Check_West": OverlapAreas.West = area; break;
-				}
-            }
-        }
-    }
+	{
+		_overlapDetectors = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
+		// foreach (var child in GetChildren())
+		// {
+		// 	if (child is Area2D area && area.Name.ToString().StartsWith("Check"))
+		// 	{
+		// 		switch (area.Name)
+		// 		{
+		// 			case "Check_North": OverlapAreas.North = area; break;
+		// 			case "Check_South": OverlapAreas.South = area; break;
+		// 			case "Check_East": OverlapAreas.East = area; break;
+		// 			case "Check_West": OverlapAreas.West = area; break;
+		// 		}
+		// 	}
+		// }
+	}
 
 	private void SetOverlapArea_Visible(bool isVisible)
 	{
-		List<Area2D> checkers = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
-		foreach (Area2D checker in checkers)
+		foreach (Area2D overlap in _overlapDetectors)
 		{
-			var sprite = checker.GetNode<Sprite2D>("Sprite2D");
+			var sprite = overlap.GetNode<Sprite2D>("Sprite2D");
 			if (sprite != null)
 			{
 				sprite.Visible = isVisible;
@@ -295,12 +260,9 @@ public partial class Component_Structural : Component
 				foreach (Area2D detector in overlapDetectors)
 				{
 					var overlappingAreas = detector.GetOverlappingAreas();
-					foreach (var area in overlappingAreas)
+					foreach (var otherSnap in overlappingAreas.OfType<SnapPoint_External>().Where(os => os == snap && snap.IsOccupied))
 					{
-						if (area is SnapPoint_External otherSnap && otherSnap == snap && snap.IsOccupied)
-						{
-							snap.SetIsUnoccupied();
-						}
+						snap.SetIsUnoccupied();
 					}
 				}
 			}
