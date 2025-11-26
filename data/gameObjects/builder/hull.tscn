@@ -6,13 +6,13 @@
 [ext_resource type="PackedScene" uid="uid://dr27kc4f67ob0" path="res://data/gameObjects/builder/components/subcomponents/snapPoint_external.tscn" id="4_rdc2r"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_d7ri1"]
-size = Vector2(258.00006, 256)
+size = Vector2(256, 256)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_twle2"]
-size = Vector2(121.00002, 240.00005)
+size = Vector2(122.00003, 240.00005)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_rdc2r"]
-size = Vector2(121.00003, 240.00005)
+size = Vector2(122.00003, 240.00005)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_xppqw"]
 size = Vector2(240.00005, 122.00003)
@@ -39,7 +39,7 @@ scale = Vector2(0.93, 0.9)
 texture = ExtResource("3_twle2")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Check_East"]
-position = Vector2(-2.5, 0)
+position = Vector2(-3, 0)
 scale = Vector2(0.9999997, 0.9999997)
 shape = SubResource("RectangleShape2D_twle2")
 
@@ -53,7 +53,7 @@ scale = Vector2(0.93, 0.9)
 texture = ExtResource("3_twle2")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Check_West"]
-position = Vector2(2.5, 0)
+position = Vector2(3, 0)
 scale = Vector2(0.9999997, 0.9999997)
 shape = SubResource("RectangleShape2D_rdc2r")
 

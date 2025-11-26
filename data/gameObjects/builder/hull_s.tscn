@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://blb7y6doa5hj8"]
+
+[ext_resource type="Texture2D" uid="uid://b8b5nhs5m1mcs" path="res://assets/mockup/Hull_S.png" id="1_0c7l8"]
+[ext_resource type="PackedScene" uid="uid://dr27kc4f67ob0" path="res://data/gameObjects/builder/components/subcomponents/snapPoint_external.tscn" id="2_hl0fj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hl0fj"]
+size = Vector2(128, 128)
+
+[node name="Area2D" type="Area2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_0c7l8")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_hl0fj")
+
+[node name="snapPoint_External_North" parent="." instance=ExtResource("2_hl0fj")]
+position = Vector2(0, -64)
+
+[node name="snapPoint_External_East" parent="." instance=ExtResource("2_hl0fj")]
+position = Vector2(64, 0)
+
+[node name="snapPoint_External_South" parent="." instance=ExtResource("2_hl0fj")]
+position = Vector2(0, 64)
+
+[node name="snapPoint_External_West" parent="." instance=ExtResource("2_hl0fj")]
+position = Vector2(-64, 0)
