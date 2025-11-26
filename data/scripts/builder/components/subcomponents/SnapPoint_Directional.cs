@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Godot;
 
 namespace Builder.Components.External
 {
@@ -8,7 +7,15 @@ namespace Builder.Components.External
         North,
         South,
         East,
-        West
+        West,
+        NorthWest,
+        NorthEast,
+        EastNorth,
+        EastSouth,
+        SouthEast,
+        SouthWest,
+        WestNorth,
+        WestSouth
     }
 
     public class SnapPoint_Directional
@@ -17,6 +24,14 @@ namespace Builder.Components.External
         public SnapPoint_External South { get; set; }
         public SnapPoint_External East { get; set; }
         public SnapPoint_External West { get; set; }
+        public SnapPoint_External NorthWest { get; set; }
+        public SnapPoint_External NorthEast { get; set; }
+        public SnapPoint_External EastNorth { get; set; }
+        public SnapPoint_External EastSouth { get; set; }
+        public SnapPoint_External SouthEast { get; set; }
+        public SnapPoint_External SouthWest { get; set; }
+        public SnapPoint_External WestNorth { get; set; }
+        public SnapPoint_External WestSouth { get; set; }
 
         public SnapPoint_External this[Face face]
         {
@@ -26,6 +41,14 @@ namespace Builder.Components.External
                 Face.South => South,
                 Face.East => East,
                 Face.West => West,
+                Face.NorthWest => NorthWest,
+                Face.NorthEast => NorthEast,
+                Face.EastNorth => EastNorth,
+                Face.EastSouth => EastSouth,
+                Face.SouthEast => SouthEast,
+                Face.SouthWest => SouthWest,
+                Face.WestNorth => WestNorth,
+                Face.WestSouth => WestSouth,
                 _ => null,
             };
             set
@@ -36,11 +59,19 @@ namespace Builder.Components.External
                     case Face.South: South = value; break;
                     case Face.East: East = value; break;
                     case Face.West: West = value; break;
+                    case Face.NorthWest: NorthWest = value; break;
+                    case Face.NorthEast: NorthEast = value; break;
+                    case Face.EastNorth: EastNorth = value; break;
+                    case Face.EastSouth: EastSouth = value; break;
+                    case Face.SouthEast: SouthEast = value; break;
+                    case Face.SouthWest: SouthWest = value; break;
+                    case Face.WestNorth: WestNorth = value; break;
+                    case Face.WestSouth: WestSouth = value; break;
                 }
             }
         }
 
-        public IEnumerable<SnapPoint_External> All => new[] { North, South, East, West };
+        public IEnumerable<SnapPoint_External> All => new[] { North, South, East, West, NorthWest, NorthEast, EastNorth, EastSouth, SouthEast, SouthWest, WestNorth, WestSouth };
 
         public bool TryGet(Face face, out SnapPoint_External snapPoint)
         {
@@ -55,6 +86,14 @@ namespace Builder.Components.External
                 Face.South => Face.North,
                 Face.East => Face.West,
                 Face.West => Face.East,
+                Face.NorthWest => Face.SouthEast,
+                Face.NorthEast => Face.SouthWest,
+                Face.EastNorth => Face.WestSouth,
+                Face.EastSouth => Face.WestNorth,
+                Face.SouthEast => Face.NorthWest,
+                Face.SouthWest => Face.NorthEast,
+                Face.WestNorth => Face.EastSouth,
+                Face.WestSouth => Face.EastNorth,
                 _ => null,
             };
     }

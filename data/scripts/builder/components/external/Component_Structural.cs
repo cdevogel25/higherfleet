@@ -74,7 +74,19 @@ public partial class Component_Structural : Component
 		if (nearbyBridge != null)
 		{
 			// only check the opposing snap points for connection (e.g. if snapping from this north, only check south on the other)
-			foreach (Face face in new Face[] { Face.North, Face.South, Face.East, Face.West })
+			foreach (Face face in new Face[] {
+				Face.North, 
+				Face.South, 
+				Face.East,
+				Face.West, 
+				Face.NorthWest, 
+				Face.NorthEast, 
+				Face.EastNorth, 
+				Face.EastSouth, 
+				Face.SouthEast, 
+				Face.SouthWest, 
+				Face.WestNorth, 
+				Face.WestSouth })
 			{
 				if (ExternalSnapPoints.TryGet(face, out SnapPoint_External externalSnapFrom) &&
 					!externalSnapFrom.IsOccupied &&
@@ -83,6 +95,7 @@ public partial class Component_Structural : Component
 				{
 					// check distance between snap points
 					float currentDistance = externalSnapFrom.GlobalPosition.DistanceTo(externalSnapTo.GlobalPosition);
+					GD.Print("From: " + externalSnapFrom.Name + " To: " + externalSnapTo.Name + " Distance: " + currentDistance);
 					if (currentDistance < distance)
 					{
 						distance = currentDistance;
@@ -95,7 +108,19 @@ public partial class Component_Structural : Component
 		{
 			foreach (Component_Structural structural in nearbyStructurals)
 			{
-				foreach (Face face in new Face[] { Face.North, Face.South, Face.East, Face.West })
+				foreach (Face face in new Face[] {
+					Face.North,
+					Face.South,
+					Face.East,
+					Face.West,
+					Face.NorthWest,
+					Face.NorthEast,
+					Face.EastNorth,
+					Face.EastSouth,
+					Face.SouthEast,
+					Face.SouthWest,
+					Face.WestNorth,
+					Face.WestSouth })
 				{
 					if (ExternalSnapPoints.TryGet(face, out SnapPoint_External externalSnapFrom) &&
 						!externalSnapFrom.IsOccupied &&
@@ -199,19 +224,6 @@ public partial class Component_Structural : Component
 	private void _CollectOverlapAreas()
 	{
 		_overlapDetectors = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
-		// foreach (var child in GetChildren())
-		// {
-		// 	if (child is Area2D area && area.Name.ToString().StartsWith("Check"))
-		// 	{
-		// 		switch (area.Name)
-		// 		{
-		// 			case "Check_North": OverlapAreas.North = area; break;
-		// 			case "Check_South": OverlapAreas.South = area; break;
-		// 			case "Check_East": OverlapAreas.East = area; break;
-		// 			case "Check_West": OverlapAreas.West = area; break;
-		// 		}
-		// 	}
-		// }
 	}
 
 	private void SetOverlapArea_Visible(bool isVisible)

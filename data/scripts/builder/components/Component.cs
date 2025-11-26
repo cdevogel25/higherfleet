@@ -39,6 +39,14 @@ public partial class Component : Area2D
 				case "SnapPoint_External_South": ExternalSnapPoints.South = child; break;
 				case "SnapPoint_External_East": ExternalSnapPoints.East = child; break;
 				case "SnapPoint_External_West": ExternalSnapPoints.West = child; break;
+				case "SnapPoint_External_NorthWest": ExternalSnapPoints.NorthWest = child; break;
+				case "SnapPoint_External_NorthEast": ExternalSnapPoints.NorthEast = child; break;
+				case "SnapPoint_External_EastNorth": ExternalSnapPoints.EastNorth = child; break;
+				case "SnapPoint_External_EastSouth": ExternalSnapPoints.EastSouth = child; break;
+				case "SnapPoint_External_SouthEast": ExternalSnapPoints.SouthEast = child; break;
+				case "SnapPoint_External_SouthWest": ExternalSnapPoints.SouthWest = child; break;
+				case "SnapPoint_External_WestNorth": ExternalSnapPoints.WestNorth = child; break;
+				case "SnapPoint_External_WestSouth": ExternalSnapPoints.WestSouth = child; break;
 			}
 		}
     }

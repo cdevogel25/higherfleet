@@ -95,5 +95,29 @@ position = Vector2(128, 0)
 [node name="SnapPoint_External_North" parent="." instance=ExtResource("4_rdc2r")]
 position = Vector2(0, -128)
 
+[node name="SnapPoint_External_NorthEast" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(64, -128)
+
+[node name="SnapPoint_External_NorthWest" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(-64, -128)
+
+[node name="SnapPoint_External_EastNorth" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(128, -64)
+
+[node name="SnapPoint_External_EastSouth" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(128, 64)
+
+[node name="SnapPoint_External_SouthEast" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(64, 128)
+
+[node name="SnapPoint_External_SouthWest" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(-64, 128)
+
+[node name="SnapPoint_External_WestNorth" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(-128, -64)
+
+[node name="SnapPoint_External_WestSouth" parent="." instance=ExtResource("4_rdc2r")]
+position = Vector2(-128, 64)
+
 [connection signal="mouse_entered" from="." to="." method="_OnMouseEntered"]
 [connection signal="mouse_exited" from="." to="." method="_OnMouseExited"]

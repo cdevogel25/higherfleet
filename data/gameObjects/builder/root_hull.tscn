@@ -34,5 +34,29 @@ scale = Vector2(0.9999998, 0.9999998)
 position = Vector2(-127.99998, 0)
 scale = Vector2(0.9999998, 0.9999998)
 
+[node name="SnapPoint_External_NorthEast" parent="." instance=ExtResource("3_32ma5")]
+position = Vector2(64, -128)
+
+[node name="SnapPoint_External_NorthWest" parent="." instance=ExtResource("3_32ma5")]
+position = Vector2(-64, -128)
+
+[node name="SnapPoint_External_EastNorth" parent="." instance=ExtResource("3_32ma5")]
+position = Vector2(128, -64)
+
+[node name="SnapPoint_External_EastSouth" parent="." instance=ExtResource("3_32ma5")]
+position = Vector2(128, 64)
+
+[node name="SnapPoint_External_SouthEast" parent="." instance=ExtResource("3_32ma5")]
+position = Vector2(64, 128)
+
+[node name="SnapPoint_External_SouthWest" parent="." instance=ExtResource("3_32ma5")]
+position = Vector2(-64, 128)
+
+[node name="SnapPoint_External_WestNorth" parent="." instance=ExtResource("3_32ma5")]
+position = Vector2(-128, -64)
+
+[node name="SnapPoint_External_WestSouth" parent="." instance=ExtResource("3_32ma5")]
+position = Vector2(-128, 64)
+
 [connection signal="mouse_entered" from="." to="." method="_OnMouseEntered"]
 [connection signal="mouse_exited" from="." to="." method="_OnMouseExited"]
