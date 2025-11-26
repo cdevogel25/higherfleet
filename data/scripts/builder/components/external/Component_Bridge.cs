@@ -9,7 +9,7 @@ public partial class Component_Bridge : Component
 	public override void _Ready()
 	{
 		ComponentPath = GetPath();
-		_IsBeingDragged = false;
+		isBeingDragged = false;
 		_IsMouseOver = false;
 		_CollectExternalSnapPoints();
 	}
@@ -22,15 +22,15 @@ public partial class Component_Bridge : Component
 		{
 			if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed)
 			{
-				_IsBeingDragged = !_IsBeingDragged;
-				if (_IsBeingDragged)
+				isBeingDragged = !isBeingDragged;
+				if (isBeingDragged)
                 {
                     _FollowMouse();
                 }
 			}
 		}
 
-		if (@event is InputEventMouseMotion && _IsBeingDragged)
+		if (@event is InputEventMouseMotion && isBeingDragged)
 		{
 			_FollowMouse();
 		}

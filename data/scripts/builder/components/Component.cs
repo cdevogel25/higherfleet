@@ -6,8 +6,9 @@ public partial class Component : Area2D
 {
 	// possibly not needed, we'll see
 	public GraphNode GraphNode = null;
+	
+	public bool isBeingDragged = false;
 	protected bool _IsMouseOver = false;
-	protected bool _IsBeingDragged = false;
 	protected bool _IsSnapped = false;
 	public SnapPoint_Directional ExternalSnapPoints = new SnapPoint_Directional();
 
@@ -23,7 +24,7 @@ public partial class Component : Area2D
 
 	protected void _FollowMouse()
 	{
-		if (_IsBeingDragged)
+		if (isBeingDragged)
 		{
 			GlobalPosition = GetGlobalMousePosition();
 		}

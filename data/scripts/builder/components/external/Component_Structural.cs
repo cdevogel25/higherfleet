@@ -12,7 +12,7 @@ public partial class Component_Structural : Component
 	private List<Area2D> _overlapDetectors = new List<Area2D>();
 	public override void _Ready()
 	{
-		_IsBeingDragged = true;
+		isBeingDragged = true;
 		_IsMouseOver = true;
 		_CollectExternalSnapPoints();
 		_CollectOverlapAreas();
@@ -29,7 +29,7 @@ public partial class Component_Structural : Component
 			{
 				//try autosnap (make a new autosnap)
 				// otherwise drop at mouse position
-				if (_IsBeingDragged)
+				if (isBeingDragged)
 				{
 					if (_TrySnap_Structural())
 					{
@@ -37,23 +37,23 @@ public partial class Component_Structural : Component
 						_IsSnapped = true;
 					}
 					SetOverlapArea_Visible(false);
-					_IsBeingDragged = false;
+					isBeingDragged = false;
 					return;
 				} else
 				{
 					SetOverlapArea_Visible(true);
-					_IsBeingDragged = true;
+					isBeingDragged = true;
 					_FollowMouse();
 					return;
 				}
-			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed && _IsBeingDragged)
+			} else if (mouseEvent.ButtonIndex == MouseButton.Right && mouseEvent.Pressed && isBeingDragged)
 			{
 				QueueFree();
 				return;
 			}
 		}
 
-		if (@event is InputEventMouseMotion && _IsBeingDragged)
+		if (@event is InputEventMouseMotion && isBeingDragged)
 		{
 			_FollowMouse();
 		}
@@ -68,52 +68,73 @@ public partial class Component_Structural : Component
 		// get nearest unoccupied external snap point
 		Component_Bridge nearbyBridge = GetNearbyBridge();
 
-		GD.Print("Nearby bridge: " + nearbyBridge);
-		GD.Print("Nearby structurals count: " + nearbyStructurals.Count);
-
+		// alright sparky, here's the deal
+		// snaps should only be even checked for opposing faces
+		// e.g. if snapping from north face, only check south face on other component
 		if (nearbyBridge != null)
 		{
-			// only check the opposing snap points for connection (e.g. if snapping from this north, only check south on the other)
-			foreach (Face face in new Face[] { Face.North, Face.South, Face.East, Face.West })
-			{
-				if (ExternalSnapPoints.TryGet(face, out SnapPoint_External externalSnapFrom) &&
-					!externalSnapFrom.IsOccupied &&
-					nearbyBridge.ExternalSnapPoints.TryGet(ExternalSnapPoints.Opposite(face).Value, out SnapPoint_External externalSnapTo) &&
-					!externalSnapTo.IsOccupied)
+			foreach (Face face in new Face[] { Face.North, Face.East, Face.South, Face.West })
+            {
+				if (OverlapAreas.TryGet(face, out Area2D overlapArea) && overlapArea != null)
 				{
-					// check distance between snap points
-					float currentDistance = externalSnapFrom.GlobalPosition.DistanceTo(externalSnapTo.GlobalPosition);
-					if (currentDistance < distance)
+					var oppositeFace = ExternalSnapPoints.Opposite(face);
+				
+					if (oppositeFace.HasValue)
 					{
-						distance = currentDistance;
-						bestSnapFrom = externalSnapFrom;
-						bestSnapTo = externalSnapTo;
+						var snapTo = nearbyBridge.ExternalSnapPoints[oppositeFace.Value];
+
+						if(snapTo != null && overlapArea.GetOverlappingAreas().Contains(snapTo))
+                        {
+                            var snapFrom = ExternalSnapPoints[face];
+
+							if (snapFrom != null && !snapFrom.IsOccupied && !snapTo.IsOccupied)
+                            {
+                                float currentDistance = snapFrom.GlobalPosition.DistanceTo(snapTo.GlobalPosition);
+								if (currentDistance < distance)
+								{
+									distance = currentDistance;
+									bestSnapFrom = snapFrom;
+									bestSnapTo = snapTo;
+								}
+                            }
+                        }
 					}
-				}	
-			}
-		} else
-		{
-			foreach (Component_Structural structural in nearbyStructurals)
-			{
-				foreach (Face face in new Face[] { Face.North, Face.South, Face.East, Face.West })
+				}
+            }
+        } else
+        {
+            foreach (Component_Structural structural in nearbyStructurals)
+            {
+			foreach (Face face in new Face[] { Face.North, Face.East, Face.South, Face.West })
 				{
-					if (ExternalSnapPoints.TryGet(face, out SnapPoint_External externalSnapFrom) &&
-						!externalSnapFrom.IsOccupied &&
-						structural.ExternalSnapPoints.TryGet(structural.ExternalSnapPoints.Opposite(face).Value, out SnapPoint_External externalSnapTo) &&
-						!externalSnapTo.IsOccupied)
+					if (OverlapAreas.TryGet(face, out Area2D overlapArea) && overlapArea != null)
 					{
-						// check distance between snap points
-						float currentDistance = externalSnapFrom.GlobalPosition.DistanceTo(externalSnapTo.GlobalPosition);
-						if (currentDistance < distance)
+						var oppositeFace = ExternalSnapPoints.Opposite(face);
+					
+						if (oppositeFace.HasValue)
 						{
-							distance = currentDistance;
-							bestSnapFrom = externalSnapFrom;
-							bestSnapTo = externalSnapTo;
+							var snapTo = structural.ExternalSnapPoints[oppositeFace.Value];
+
+							if(snapTo != null && overlapArea.GetOverlappingAreas().Contains(snapTo))
+							{
+								var snapFrom = ExternalSnapPoints[face];
+
+								if (snapFrom != null && !snapFrom.IsOccupied && !snapTo.IsOccupied)
+								{
+									float currentDistance = snapFrom.GlobalPosition.DistanceTo(snapTo.GlobalPosition);
+									if (currentDistance < distance)
+									{
+										distance = currentDistance;
+										bestSnapFrom = snapFrom;
+										bestSnapTo = snapTo;
+									}
+								}
+							}
 						}
 					}
 				}
-			}
-		}
+            }
+        }
 		
 		if (bestSnapFrom == null || bestSnapTo == null)
 		{
@@ -155,11 +176,9 @@ public partial class Component_Structural : Component
 		{
 			if (body is Component_Structural structural && structural != this)
 			{
-				GD.Print("Would overlap with structural: " + structural);
 				result = true;
 			} else if (body is Component_Bridge bridge)
 			{
-				GD.Print("Would overlap with bridge: " + bridge);
 				result = true;
 			}
 		}
@@ -177,7 +196,6 @@ public partial class Component_Structural : Component
 			var overlappingAreas = overlap.GetOverlappingAreas();
 			foreach (var area in overlappingAreas.OfType<Component_Bridge>())
 			{
-				GD.Print("Found nearby bridge: " + area);
 				return area;
 			}
 		}
@@ -199,19 +217,17 @@ public partial class Component_Structural : Component
 	private void _CollectOverlapAreas()
 	{
 		_overlapDetectors = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
-		// foreach (var child in GetChildren())
-		// {
-		// 	if (child is Area2D area && area.Name.ToString().StartsWith("Check"))
-		// 	{
-		// 		switch (area.Name)
-		// 		{
-		// 			case "Check_North": OverlapAreas.North = area; break;
-		// 			case "Check_South": OverlapAreas.South = area; break;
-		// 			case "Check_East": OverlapAreas.East = area; break;
-		// 			case "Check_West": OverlapAreas.West = area; break;
-		// 		}
-		// 	}
-		// }
+
+		foreach (var area in _overlapDetectors)
+        {
+            switch (area.Name)
+            {
+                case "Check_North": OverlapAreas.North = area; break;
+				case "Check_South": OverlapAreas.South = area; break;
+				case "Check_East": OverlapAreas.East = area; break;
+				case "Check_West": OverlapAreas.West = area; break;
+            }
+        }
 	}
 
 	private void SetOverlapArea_Visible(bool isVisible)
@@ -239,7 +255,6 @@ public partial class Component_Structural : Component
 		// free neighboring snap points that this was snapped to
 		// do I need to change the collision layer of snap points and overlap detectors?
 		List<Component_Structural> nearbyStructurals = GetNearbyStructurals();
-		GD.Print("Nearby structurals count on pickup: " + nearbyStructurals.Count);
 		HashSet<SnapPoint_External> nearbyBridgeSnapPoints = null;
 		Component_Bridge nearbyBridge = GetNearbyBridge();
 		if (nearbyBridge != null)
