@@ -15,13 +15,11 @@ public partial class SnapPoint_External : Area2D
 	}
 	public void SetIsOccupied()
 	{
-		GD.Print("Snap point " + Name + " of " + GetParent<Component>().Name + " is now occupied.");
 		IsOccupied = true;
 	}
 	
 	public void SetIsUnoccupied()
 	{
-		GD.Print("Snap point " + Name + " of " + GetParent<Component>().Name + " is now unoccupied.");
 		IsOccupied = false;
 	}
 
