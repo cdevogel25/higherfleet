@@ -30,7 +30,7 @@ public partial class Component : Area2D
 		}
 	}
 
-	protected void _CollectExternalSnapPoints()
+	protected virtual void _CollectExternalSnapPoints()
     {
         foreach (var child in GetChildren().OfType<SnapPoint_External>())
 		{

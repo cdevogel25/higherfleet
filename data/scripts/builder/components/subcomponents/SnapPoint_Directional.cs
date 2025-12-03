@@ -96,5 +96,25 @@ namespace Builder.Components.External
                 Face.WestSouth => Face.EastNorth,
                 _ => null,
             };
+
+        public Face? Opposite_SmallA(Face face) =>
+            face switch
+            {
+                Face.North => Face.SouthEast,
+                Face.South => Face.NorthEast,
+                Face.East => Face.WestNorth,
+                Face.West => Face.EastNorth,
+                _ => null,
+            };
+        
+        public Face? Opposite_SmallB(Face face) =>
+            face switch
+            {
+                Face.North => Face.SouthWest,
+                Face.South => Face.NorthWest,
+                Face.East => Face.WestSouth,
+                Face.West => Face.EastSouth,
+                _ => null,
+            };
     }
 }

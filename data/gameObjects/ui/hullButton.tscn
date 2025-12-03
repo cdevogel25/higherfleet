@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://mpvuhlvoa4jg"]
 
 [ext_resource type="Texture2D" uid="uid://dp6iv8k1xb8se" path="res://assets/ui/ButtonTemplate.png" id="1_rldas"]
-[ext_resource type="Texture2D" uid="uid://bi4i7evc2ql8j" path="res://assets/mockup/ShipMockup.png" id="2_nytg8"]
 [ext_resource type="Script" uid="uid://cjj7u06quefxg" path="res://data/scripts/ui/HullButton.cs" id="2_wcgwc"]
+[ext_resource type="Texture2D" uid="uid://c2nag86pa3wtm" path="res://assets/mockup/Hull.png" id="3_3xe8f"]
 
 [node name="Control" type="Control"]
 z_index = -1
@@ -25,7 +25,7 @@ texture_normal = ExtResource("1_rldas")
 [node name="Sprite2D" type="Sprite2D" parent="TextureButton"]
 position = Vector2(129, 115)
 scale = Vector2(0.75, 0.75)
-texture = ExtResource("2_nytg8")
+texture = ExtResource("3_3xe8f")
 
 [node name="Label" type="Label" parent="TextureButton"]
 layout_mode = 0

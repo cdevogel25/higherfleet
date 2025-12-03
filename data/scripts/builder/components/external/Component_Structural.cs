@@ -59,7 +59,7 @@ public partial class Component_Structural : Component
 		}
 	}
 
-	private bool _TrySnap_Structural()
+	protected virtual bool _TrySnap_Structural()
 	{
 		List<Component_Structural> nearbyStructurals = GetNearbyStructurals();
 		float distance = float.MaxValue;
