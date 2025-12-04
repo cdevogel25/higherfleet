@@ -10,7 +10,7 @@ public partial class HullButton : Control
 	public override void _Ready()
 	{
 		pathToBridge = GetTree().GetNodesInGroup("RootBridge")[0].GetPath().ToString();
-		hullScene = GD.Load<PackedScene>("res://data/gameObjects/builder/hull.tscn");
+		hullScene = GD.Load<PackedScene>("res://data/gameObjects/builder/hull_s.tscn");
 	}
 	private void OnPressed()
 	{

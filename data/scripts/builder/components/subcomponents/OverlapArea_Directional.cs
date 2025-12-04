@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Dynamic;
 using Godot;
 
 namespace Builder.Components.External
@@ -38,6 +39,11 @@ namespace Builder.Components.External
         {
             area = this[face];
             return area != null;
+        }
+
+        public Area2D GetFace(Face face)
+        {
+            return this[face];
         }
     }
 }

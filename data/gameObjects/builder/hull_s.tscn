@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://blb7y6doa5hj8"]
+[gd_scene load_steps=7 format=3 uid="uid://blb7y6doa5hj8"]
 
 [ext_resource type="Texture2D" uid="uid://b8b5nhs5m1mcs" path="res://assets/mockup/Hull_S.png" id="1_0c7l8"]
+[ext_resource type="Script" uid="uid://bhbqc83qqthh6" path="res://data/scripts/builder/components/external/Component_Structural.cs" id="1_wkkls"]
 [ext_resource type="PackedScene" uid="uid://dr27kc4f67ob0" path="res://data/gameObjects/builder/components/subcomponents/snapPoint_external.tscn" id="2_hl0fj"]
 [ext_resource type="Texture2D" uid="uid://c5yh6mhc030sm" path="res://assets/mockup/OverlapArea_S.png" id="3_i8yu7"]
 
@@ -10,13 +11,57 @@ size = Vector2(128, 128)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wkkls"]
 size = Vector2(128, 68)
 
-[node name="Area2D" type="Area2D"]
+[node name="HullPiece_S" type="Area2D"]
+script = ExtResource("1_wkkls")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="HullSprite" type="Sprite2D" parent="."]
 texture = ExtResource("1_0c7l8")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="ObjectCollisionShape" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_hl0fj")
+
+[node name="CheckNorth" type="Area2D" parent="."]
+position = Vector2(0, -100)
+
+[node name="Sprite2D" type="Sprite2D" parent="CheckNorth"]
+texture = ExtResource("3_i8yu7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckNorth"]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_wkkls")
+
+[node name="CheckEast" type="Area2D" parent="."]
+position = Vector2(100, 0)
+rotation = 1.5707964
+
+[node name="Sprite2D" type="Sprite2D" parent="CheckEast"]
+texture = ExtResource("3_i8yu7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckEast"]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_wkkls")
+
+[node name="CheckSouth" type="Area2D" parent="."]
+position = Vector2(0, 100)
+rotation = -3.1415925
+
+[node name="Sprite2D" type="Sprite2D" parent="CheckSouth"]
+texture = ExtResource("3_i8yu7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckSouth"]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_wkkls")
+
+[node name="CheckWest" type="Area2D" parent="."]
+position = Vector2(-100, 0)
+rotation = -1.5707964
+
+[node name="Sprite2D" type="Sprite2D" parent="CheckWest"]
+texture = ExtResource("3_i8yu7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckWest"]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_wkkls")
 
 [node name="snapPoint_External_North" parent="." instance=ExtResource("2_hl0fj")]
 position = Vector2(0, -64)
@@ -29,46 +74,3 @@ position = Vector2(0, 64)
 
 [node name="snapPoint_External_West" parent="." instance=ExtResource("2_hl0fj")]
 position = Vector2(-64, 0)
-
-[node name="CheckNorth" type="Area2D" parent="."]
-position = Vector2(0, -100)
-
-[node name="Sprite2D2" type="Sprite2D" parent="CheckNorth"]
-texture = ExtResource("3_i8yu7")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckNorth"]
-position = Vector2(0, 2)
-shape = SubResource("RectangleShape2D_wkkls")
-
-[node name="CheckEast" type="Area2D" parent="."]
-position = Vector2(100, 0)
-rotation = 1.5707964
-
-[node name="Sprite2D2" type="Sprite2D" parent="CheckEast"]
-texture = ExtResource("3_i8yu7")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckEast"]
-position = Vector2(0, 2)
-shape = SubResource("RectangleShape2D_wkkls")
-
-[node name="CheckSouth" type="Area2D" parent="."]
-position = Vector2(0, 100)
-rotation = 3.1415927
-
-[node name="Sprite2D2" type="Sprite2D" parent="CheckSouth"]
-texture = ExtResource("3_i8yu7")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckSouth"]
-position = Vector2(0, 2)
-shape = SubResource("RectangleShape2D_wkkls")
-
-[node name="CheckWest" type="Area2D" parent="."]
-position = Vector2(-100, 0)
-rotation = -1.5707964
-
-[node name="Sprite2D2" type="Sprite2D" parent="CheckWest"]
-texture = ExtResource("3_i8yu7")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CheckWest"]
-position = Vector2(0, 2)
-shape = SubResource("RectangleShape2D_wkkls")

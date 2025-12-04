@@ -8,7 +8,7 @@ public partial class Component_Structural : Component
 	// for structural components (pretty much just hull tiles,
 	// but I want to keep them separate from things like electronics, weapons, storage components, etc.)
 	public OverlapArea_Directional OverlapAreas = new OverlapArea_Directional();
-	private Vector2 _snapPosition = Vector2.Zero;
+	protected Vector2 _snapPosition = Vector2.Zero;
 	private List<Area2D> _overlapDetectors = new List<Area2D>();
 	public override void _Ready()
 	{
@@ -148,8 +148,8 @@ public partial class Component_Structural : Component
 						}
 					}
 				}
-            }
-        }
+			}
+		}
 		
 		if (bestSnapFrom == null || bestSnapTo == null)
 		{
@@ -179,7 +179,7 @@ public partial class Component_Structural : Component
 	}
 
 	// this might not be necessary anymore
-	private bool _WouldOverlap(Vector2 snapTo)
+	protected bool _WouldOverlap(Vector2 snapTo)
 	{
 		Area2D tempArea = new Area2D();
 		tempArea.AddChild(GetNode<CollisionShape2D>("ObjectCollisionShape").Duplicate());
@@ -229,12 +229,12 @@ public partial class Component_Structural : Component
 			   .ToList();
 	}
 
-	private void _CollectOverlapAreas()
+	protected void _CollectOverlapAreas()
 	{
 		_overlapDetectors = GetChildren().OfType<Area2D>().Where(a => a.Name.ToString().StartsWith("Check")).ToList();
 	}
 
-	private void SetOverlapArea_Visible(bool isVisible)
+	protected void SetOverlapArea_Visible(bool isVisible)
 	{
 		foreach (Area2D overlap in _overlapDetectors)
 		{
