@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://ckc8so1502pn3"]
+
+[ext_resource type="Script" uid="uid://6o2as3uy20sw" path="res://data/scripts/FleetStrategicView.cs" id="1_etm5i"]
+[ext_resource type="Texture2D" uid="uid://ctx78c0bvh3qp" path="res://assets/mockup/strategic_character.png" id="1_r6oix"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_etm5i"]
+size = Vector2(256, 256)
+
+[node name="Area2D" type="Area2D"]
+script = ExtResource("1_etm5i")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_r6oix")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_etm5i")
